@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Текстильний бутік | Головна</title>
+    <link rel="stylesheet" href="shop.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+   <header class="navbar">
+        <div class="container nav-container">
+            <button id="burger-btn" class="burger-btn">
+                <span style="font-size: 24px;">☰</span> Меню
+            </button>
+            
+            <a href="#" class="logo">Текстильний <span>бутік</span></a>
+            
+            <div class="cart-btn">
+                🛍️ <span class="cart-count">0</span>
+            </div>
+        </div>
+    </header>
+
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+    <div id="sidebar" class="sidebar">
+        <button id="close-sidebar" class="close-sidebar">✖</button>
+        <h3 style="font-size: 24px; margin-bottom: 20px;">Каталог</h3>
+        <ul class="category-list">
+            <li><a href="#" data-category="all" class="cat-link active">Усі товари</a></li>
+            <li><a href="#" data-category="postil" class="cat-link">Постільна білизна</a></li>
+            <li><a href="#" data-category="rushnyky" class="cat-link">Рушники</a></li>
+            <li><a href="#" data-category="kids" class="cat-link">Дитячі колекції 🧸</a></li>
+        </ul>
+        
+        <h3 style="font-size: 20px; margin: 30px 0 15px;">Інформація</h3>
+        <ul class="category-list">
+            <li><a href="payment.html" class="cat-link" style="color: var(--text-dark);">💳 Доставка та оплата</a></li>
+            <li><a href="returns.html" class="cat-link" style="color: var(--text-dark);">🔄 Обмін та повернення</a></li>
+        </ul>
+    </div>
+
+    <section class="hero">
+        <div class="hero-overlay"></div> <div class="container hero-content">
+            <h1>Створіть затишок у своєму домі</h1>
+            <p>Преміальна постільна білизна, м'які рушники та стильний декор для вашого ідеального відпочинку.</p>
+            <a href="#catalog" class="cta-button">Дивитись каталог</a>
+        </div>
+    </section>
+
+    <section id="catalog" class="container catalog-section">
+        <div class="section-header">
+            <h2>Наші товари</h2>
+        </div>
+        <div id="material-filters" class="material-filters">
+    </div>
+
+<div id="products-grid" class="products-grid"></div>
+            <p style="text-align: center; grid-column: 1 / -1; color: #636E72;">Завантаження товарів...</p>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-container">
+            
+            <div class="contact-blocks">
+                
+                <div class="contact-card">
+                    <h3>Ми у соцмережах</h3>
+                    <p>Слідкуйте за нашими новинками</p>
+                    <div class="social-icons-row">
+                        <a href="https://www.tiktok.com/@allaverba7777?_r=1&_t=ZS-96KIB8xjN2m" class="social-btn tiktok" target="_blank" title="TikTok">
+                            <i class="fab fa-tiktok"></i>
+                        </a>
+                        <a href="https://t.me/+ntjmMOD4Kok5MWUy" class="social-btn telegram" target="_blank" title="Telegram Канал">
+                            <i class="fab fa-telegram-plane"></i>
+                        </a>
+                        <a href="https://invite.viber.com/?g2=AQBE4UUPZY7Wj1Nl8TwCF%2FrmmkGG3apyRs3B0NpNvomFQMrz5tVnnwjl4vmWPO4Q" class="social-btn viber" target="_blank" title="Viber Спільнота">
+                            <i class="fab fa-viber"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="contact-card">
+                    <h3>Написати менеджеру</h3>
+                    <p>Оформлення замовлень та питання</p>
+                    <div class="social-icons-row">
+                        <a href="https://t.me/AllaVerba1" class="social-btn telegram" target="_blank" title="Менеджер Telegram">
+                            <i class="fab fa-telegram-plane"></i>
+                        </a>
+                        <a href="viber://chat?number=+380984165936" class="social-btn viber" target="_blank" title="Менеджер Viber">
+                            <i class="fab fa-viber"></i>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="footer-bottom">
+                <div class="footer-links">
+                    <a href="payment.html">Доставка та оплата</a>
+                    <span class="dot">•</span>
+                    <a href="returns.html">Обмін та повернення</a>
+                </div>
+                <p class="copyright">© 2026 Текстильний бутік. Всі права захищено.</p>
+            </div>
+
+        </div>
+    </footer>
+
+    <div id="product-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal">✖</button>
+            <div class="modal-body">
+                <div class="modal-gallery">
+                    <img id="m-img" src="" alt="Фото товару">
+                </div>
+                <div class="modal-info">
+                    <span id="m-category" class="product-category"></span>
+                    <h2 id="m-title">Назва</h2>
+                    <p id="m-sku" style="color: #A0A0A0; font-size: 14px; margin-bottom: 10px;"></p>
+                    <div id="m-price" class="modal-price">0 ₴</div>
+                    <div class="modal-options">
+                        <p id="m-material" style="font-size: 14px; margin-bottom: 15px;"></p>
+                        <div id="m-variations" class="variation-buttons"></div>
+                        <div class="m-components-wrap">
+                            <h4>Комплектація:</h4>
+                            <ul id="m-components" class="m-components-list"></ul>
+                        </div>
+                    </div>
+                    <div class="modal-desc">
+                        <h4>Опис:</h4>
+                        <p id="m-desc"></p>
+                    </div>
+                    <button id="modal-add-to-cart" class="cta-button" style="width: 100%; margin-top: 20px;">🛒 Додати в кошик</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+    <div id="info-modal" class="modal">
+        <div class="modal-content" style="max-width: 600px; padding: 40px;">
+            <button class="close-info close-modal" style="top: 15px; right: 15px;">✖</button>
+            <h2 id="info-title" style="margin-bottom: 20px; color: var(--text-dark); font-size: 28px;">Назва</h2>
+            <div id="info-body" style="color: var(--text-gray); font-size: 16px; line-height: 1.8; white-space: pre-wrap;">
+                Текст
+            </div>
+        </div>
+    </div>
+    <div id="cart-overlay" class="cart-overlay"></div>
+
+    <div id="cart-panel" class="cart-panel">
+        <div class="cart-header">
+            <h2>Твоє замовлення</h2>
+            <button id="close-cart" class="close-cart">✖</button>
+        </div>
+
+        <div id="cart-items" class="cart-items">
+            </div>
+
+        <div class="cart-total-box">
+            <span>Разом до оплати:</span>
+            <span id="cart-total-sum">0 ₴</span>
+        </div>
+
+        <div class="checkout-section">
+            <p class="info-text alert-text">⚠️ Наявність товару уточнюйте у менеджера.</p>
+            <p class="info-text">Відправка здійснюється за попередньою передплатою (суму уточнює менеджер).</p>
+            
+            <h3 style="margin-bottom: 10px; font-size: 16px; color: var(--text-dark);">Дані для відправки (Нова Пошта):</h3>
+            <input type="text" id="client-name" class="checkout-input" placeholder="ПІБ отримувача">
+            <input type="tel" id="client-phone" class="checkout-input" placeholder="Номер телефону">
+            <input type="text" id="client-city" class="checkout-input" placeholder="Місто">
+            <input type="text" id="client-branch" class="checkout-input" placeholder="Номер відділення або поштомат">
+
+            <details class="fop-details">
+                <summary>💳 Реквізити для оплати (ФОП)</summary>
+                <div class="fop-content">
+                    <strong>ФОП Верба Алла Миколаївна</strong><br>
+                    ЄДРПОУ: 3525510183<br>
+                    IBAN: UA343052990000026007004922492<br>
+                    <em>Призначення: оплата за товар</em>
+                </div>
+            </details>
+
+            <h3 style="margin: 20px 0 10px; font-size: 16px; text-align: center; color: var(--text-dark);">Оформити замовлення:</h3>
+<div class="order-buttons">
+    <button id="btn-telegram" class="order-btn tg-btn">
+        <i class="fab fa-telegram-plane"></i> Замовити в Telegram
+    </button>
+    <button id="btn-viber" class="order-btn vi-btn">
+        <i class="fab fa-viber"></i> Замовити у Viber
+    </button>
+</div>
+        </div>
+    </div>
+</body>
+</html>
