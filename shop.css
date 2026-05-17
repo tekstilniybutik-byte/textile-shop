@@ -1287,3 +1287,70 @@ footer {
     /* Прокручуємо рівно половину (оригінали), щоб дублікати стали на їх місце непомітно */
     100% { transform: translateX(calc(-50% - 12.5px)); } 
 }
+/* --- СТИЛІ ВІКНА LIGHTBOX ДЛЯ ВІДГУКІВ --- */
+.lightbox-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Наш фірмовий ефект темного скла */
+    background: rgba(0, 0, 0, 0.85); 
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* Поверх всього! */
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s ease;
+    cursor: zoom-out; /* Підказує клієнту, що клік закриє фото */
+}
+
+/* Стан, коли Lightbox відкритий (додається через JS) */
+.lightbox-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.lightbox-image {
+    max-width: 90%;
+    max-height: 85%;
+    object-fit: contain;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    /* Анімація появи великого фото */
+    transform: scale(0.9);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.lightbox-overlay.active .lightbox-image {
+    transform: scale(1);
+}
+
+/* Велика кнопка Хрестик для мобільних */
+.close-lightbox {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    font-size: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.close-lightbox:hover {
+    background: rgba(255, 71, 126, 0.3);
+    color: #FF477E;
+}

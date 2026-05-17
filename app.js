@@ -489,3 +489,50 @@ window.sendOrder = function(platform) {
         });
     }
 };
+// --- ЛОГІКА ВІДКРИТТЯ ВІДГУКІВ (LIGHTBOX) ---
+document.addEventListener('DOMContentLoaded', () => {
+    const marqueeTrack = document.querySelector('.marquee-track');
+    const lightbox = document.getElementById('review-lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const closeBtn = document.getElementById('close-review');
+
+    // Перевіряємо, чи є ці елементи на сторінці (щоб не було помилок)
+    if (!marqueeTrack || !lightbox || !lightboxImg || !closeBtn) return;
+
+    // СЛУХАЧ КЛІКІВ: Натискання на відгук
+    const reviewCards = marqueeTrack.querySelectorAll('.review-card img');
+    reviewCards.forEach(img => {
+        img.addEventListener('click', (e) => {
+            e.stopPropagation(); // Запобігаємо конфліктам з іншими кліками
+            
+            // 1. Беремо посилання на картинку, на яку натиснули
+            const clickedImgSrc = e.target.src;
+            
+            // 2. Підставляємо її у велике вікно
+            lightboxImg.src = clickedImgSrc;
+            
+            // 3. Відкриваємо Lightbox
+            lightbox.classList.add('active');
+            
+            // 4. Забороняємо скрол сайту на фоні (щоб не гортався, коли читаємо)
+            document.body.style.overflow = 'hidden';
+            
+            // 5. Зупиняємо анімацію біжучої стрічки (через JS, бо CSS :hover при кліку збивається)
+            marqueeTrack.style.animationPlayState = 'paused';
+        });
+    });
+
+    // СЛУХАЧ ЗАКРИТТЯ: Натискання на хрестик АБО на темний фон
+    const closeLightbox = () => {
+        lightbox.classList.remove('active');
+        document.body.style.overflow = ''; // Повертаємо скрол сайту
+        
+        // Відновлюємо рух стрічки (через 400мс, щоб анімація закриття вікна закінчилась)
+        setTimeout(() => {
+            marqueeTrack.style.animationPlayState = 'running';
+        }, 400);
+    };
+
+    closeBtn.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', closeLightbox); // Клік в будь-яке місце фону теж закриває
+});
