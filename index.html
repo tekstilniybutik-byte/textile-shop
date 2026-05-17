@@ -27,11 +27,12 @@
     <div id="sidebar" class="sidebar">
         <button id="close-sidebar" class="close-sidebar">✖</button>
         <h3 style="font-size: 24px; margin-bottom: 20px;">Каталог</h3>
-        <ul class="category-list">
+        <ul class="category-list" style="margin-top: 0; padding-left: 0;">
             <li><a href="#" data-category="all" class="cat-link active">Усі товари</a></li>
             <li><a href="#" data-category="postil" class="cat-link">Постільна білизна</a></li>
+            <li><a href="#" data-category="kids" class="cat-link">Дитяча колекція 🧸</a></li>
             <li><a href="#" data-category="rushnyky" class="cat-link">Рушники</a></li>
-            <li><a href="#" data-category="kids" class="cat-link">Дитячі колекції 🧸</a></li>
+            <li><a href="#" data-category="pledy" class="cat-link">Пледи</a></li>
         </ul>
         
         <h3 style="font-size: 20px; margin: 30px 0 15px;">Інформація</h3>
@@ -43,20 +44,18 @@
 
     <section class="hero">
         <div class="hero-overlay"></div> <div class="container hero-content">
-            <h1>Створіть затишок у своєму домі</h1>
-            <p>Преміальна постільна білизна, м'які рушники та стильний декор для вашого ідеального відпочинку.</p>
+            <h1>Естетика вашого відпочинку</h1>
+            <p>Розкішна постільна білизна, невагомі пледи та м'які рушники, що дарують ніжність щодня.</p>
             <a href="#catalog" class="cta-button">Дивитись каталог</a>
         </div>
     </section>
 
-    <section id="catalog" class="container catalog-section">
+        <section id="catalog" class="container catalog-section">
         <div class="section-header">
             <h2>Наші товари</h2>
         </div>
-        <div id="material-filters" class="material-filters">
-    </div>
 
-<div id="products-grid" class="products-grid"></div>
+        <div id="products-grid" class="products-grid">
             <p style="text-align: center; grid-column: 1 / -1; color: #636E72;">Завантаження товарів...</p>
         </div>
     </section>
@@ -110,34 +109,51 @@
     </footer>
 
     <div id="product-modal" class="modal">
-        <div class="modal-content">
-            <button class="close-modal">✖</button>
-            <div class="modal-body">
-                <div class="modal-gallery">
-                    <img id="m-img" src="" alt="Фото товару">
+    <div class="modal-content">
+        <button class="close-modal" onclick="closeModal()">✖</button>
+        
+        <div class="modal-grid">
+            <div class="modal-image-container">
+                <img id="modal-img" src="" alt="Товар">
+            </div>
+            
+            <div class="modal-info">
+                <h2 id="modal-title">Назва товару</h2>
+                <p id="modal-art" style="color: #8e8e93; font-size: 14px; margin-bottom: 10px;">Арт: —</p>
+                
+                <div class="modal-price-container">
+                    <span id="modal-price" class="current-price">0 ₴</span>
                 </div>
-                <div class="modal-info">
-                    <span id="m-category" class="product-category"></span>
-                    <h2 id="m-title">Назва</h2>
-                    <p id="m-sku" style="color: #A0A0A0; font-size: 14px; margin-bottom: 10px;"></p>
-                    <div id="m-price" class="modal-price">0 ₴</div>
-                    <div class="modal-options">
-                        <p id="m-material" style="font-size: 14px; margin-bottom: 15px;"></p>
-                        <div id="m-variations" class="variation-buttons"></div>
-                        <div class="m-components-wrap">
-                            <h4>Комплектація:</h4>
-                            <ul id="m-components" class="m-components-list"></ul>
+
+                <div id="modal-desc" class="modal-description">Опис товару...</div>
+
+                <div id="variations-wrapper" style="margin-top: 20px;">
+                    <p style="font-weight: 600; margin-bottom: 10px;">Оберіть варіант:</p>
+                    <div id="modal-variations" class="variation-chips">
                         </div>
-                    </div>
-                    <div class="modal-desc">
-                        <h4>Опис:</h4>
-                        <p id="m-desc"></p>
-                    </div>
-                    <button id="modal-add-to-cart" class="cta-button" style="width: 100%; margin-top: 20px;">🛒 Додати в кошик</button>
                 </div>
+
+                <div class="quantity-selector" style="margin-top: 25px;">
+                    <p style="font-weight: 600; margin-bottom: 10px;">Кількість:</p>
+                    <div class="qty-controls">
+                        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+                        <span id="modal-qty">1</span>
+                        <button class="qty-btn" onclick="changeQty(1)">+</button>
+                    </div>
+                </div>
+
+                <div class="total-section">
+                    <span>Разом:</span>
+                    <span id="modal-total-price">0 ₴</span>
+                </div>
+
+                <button id="add-to-cart-btn" class="buy-btn-big">
+                    Додати в кошик 🛍️
+                </button>
             </div>
         </div>
     </div>
+</div>
 
     <script type="module" src="app.js"></script>
     <div id="info-modal" class="modal">
@@ -152,49 +168,74 @@
     <div id="cart-overlay" class="cart-overlay"></div>
 
     <div id="cart-panel" class="cart-panel">
-        <div class="cart-header">
-            <h2>Твоє замовлення</h2>
-            <button id="close-cart" class="close-cart">✖</button>
-        </div>
+    <div class="cart-header">
+        <h2 style="margin:0; font-size: 18px; font-weight: 800;">Твоє замовлення</h2>
+        <button id="close-cart" class="close-cart">✖</button>
+    </div>
 
-        <div id="cart-items" class="cart-items">
+    <div class="cart-scrollable-content">
+        <div id="cart-items" class="cart-items-container"></div>
+
+        <div class="checkout-form-mono">
+            <h3 class="section-title">Дані для відправки:</h3>
+            <input type="text" id="client-name" class="mono-input" placeholder="ПІБ отримувача">
+            <input type="tel" id="client-phone" class="mono-input" placeholder="Номер телефону">
+            <input type="text" id="client-city" class="mono-input" placeholder="Місто або село">
+
+            <div class="delivery-selector">
+                <label class="delivery-option">
+                    <input type="radio" name="delivery-service" value="Нова Пошта" checked>
+                    <span class="custom-radio">Нова Пошта</span>
+                </label>
+                <label class="delivery-option">
+                    <input type="radio" name="delivery-service" value="Укрпошта">
+                    <span class="custom-radio">Укрпошта</span>
+                </label>
             </div>
 
-        <div class="cart-total-box">
-            <span>Разом до оплати:</span>
-            <span id="cart-total-sum">0 ₴</span>
-        </div>
+            <div id="ukrposhta-hint" class="mono-hint">
+                ✅ <strong>Без передплати!</strong> Оплата при отриманні.
+            </div>
 
-        <div class="checkout-section">
-            <p class="info-text alert-text">⚠️ Наявність товару уточнюйте у менеджера.</p>
-            <p class="info-text">Відправка здійснюється за попередньою передплатою (суму уточнює менеджер).</p>
-            
-            <h3 style="margin-bottom: 10px; font-size: 16px; color: var(--text-dark);">Дані для відправки (Нова Пошта):</h3>
-            <input type="text" id="client-name" class="checkout-input" placeholder="ПІБ отримувача">
-            <input type="tel" id="client-phone" class="checkout-input" placeholder="Номер телефону">
-            <input type="text" id="client-city" class="checkout-input" placeholder="Місто">
-            <input type="text" id="client-branch" class="checkout-input" placeholder="Номер відділення або поштомат">
+            <div id="np-type-block" class="delivery-selector">
+                <label class="delivery-option">
+                    <input type="radio" name="np-type" value="Відділення" checked>
+                    <span class="custom-radio">Відділення</span>
+                </label>
+                <label class="delivery-option">
+                    <input type="radio" name="np-type" value="Поштомат">
+                    <span class="custom-radio">Поштомат</span>
+                </label>
+            </div>
 
-            <details class="fop-details">
-                <summary>💳 Реквізити для оплати (ФОП)</summary>
-                <div class="fop-content">
-                    <strong>ФОП Верба Алла Миколаївна</strong><br>
+            <input type="text" id="client-branch" class="mono-input" placeholder="№ відділення або поштомату">
+
+            <details class="mono-details">
+                <summary>💳 Реквізити ФОП</summary>
+                <div class="fop-text">
+                    ФОП Верба Алла Миколаївна<br>
                     ЄДРПОУ: 3525510183<br>
-                    IBAN: UA343052990000026007004922492<br>
-                    <em>Призначення: оплата за товар</em>
+                    IBAN: UA343052990000026007004922492
                 </div>
             </details>
-
-            <h3 style="margin: 20px 0 10px; font-size: 16px; text-align: center; color: var(--text-dark);">Оформити замовлення:</h3>
-<div class="order-buttons">
-    <button id="btn-telegram" class="order-btn tg-btn">
-        <i class="fab fa-telegram-plane"></i> Замовити в Telegram
-    </button>
-    <button id="btn-viber" class="order-btn vi-btn">
-        <i class="fab fa-viber"></i> Замовити у Viber
-    </button>
-</div>
         </div>
     </div>
+
+    <div class="cart-footer-fixed">
+        <div class="total-row">
+            <span class="total-label">До сплати:</span>
+            <span id="cart-total-sum" class="total-price">0 ₴</span>
+        </div>
+
+        <div class="order-buttons-grid">
+            <button id="btn-telegram" class="mono-btn btn-tg">
+                <i class="fab fa-telegram-plane"></i> Telegram
+            </button>
+            <button id="btn-viber" class="mono-btn btn-vi">
+                <i class="fab fa-viber"></i> Viber
+            </button>
+        </div>
+    </div>
+</div>
 </body>
 </html>

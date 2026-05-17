@@ -5,70 +5,162 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// --- ГЛОБАЛЬНІ ЗМІННІ ---
 const productsGrid = document.getElementById('products-grid');
-let allProducts = []; // Тут будемо зберігати завантажені товари
+let allProducts = []; 
+const categoriesDict = { 'postil': 'Постільна білизна', 'rushnyky': 'Рушники', 'pledy': 'Пледи', 'dekor': 'Декор', 'kids': 'Дитяча колекція 🧸' };
 
-const categoriesDict = { 'postil': 'Постільна білизна', 'rushnyky': 'Рушники', 'pledy': 'Пледи', 'dekor': 'Декор' };
+let myCart = JSON.parse(localStorage.getItem('shop_cart')) || [];
+let currentProduct = null;
+let currentVariation = null;
+let currentQty = 1;
 
-// Завантаження з бази
+// --- ІНІЦІАЛІЗАЦІЯ ПРИ ЗАВАНТАЖЕННІ ---
+document.addEventListener('DOMContentLoaded', () => {
+    loadProducts();
+    updateCartUI();
+
+    // -- Меню (Бургер) --
+    const burgerBtn = document.getElementById('burger-btn');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const closeSidebarBtn = document.getElementById('close-sidebar');
+
+    function toggleMenu() {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('show');
+        document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+    }
+
+    if (burgerBtn) burgerBtn.addEventListener('click', toggleMenu);
+    if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', toggleMenu);
+    if (overlay) overlay.addEventListener('click', toggleMenu);
+
+    document.querySelectorAll('.cat-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            const cat = e.target.getAttribute('data-category');
+            if (!cat) return; 
+            e.preventDefault();
+            document.querySelectorAll('.cat-link').forEach(l => l.classList.remove('active'));
+            e.target.classList.add('active');
+            renderProducts(cat);
+            toggleMenu();
+            document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+
+    // -- Кошик (відкриття/закриття) --
+    const cartOverlay = document.getElementById('cart-overlay');
+    const cartPanel = document.getElementById('cart-panel');
+    const closeCartBtn = document.getElementById('close-cart');
+    const cartBtn = document.querySelector('.cart-btn');
+
+    function openCart() {
+        if(cartOverlay) cartOverlay.classList.add('show');
+        if(cartPanel) cartPanel.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeCart() {
+        if(cartOverlay) cartOverlay.classList.remove('show');
+        if(cartPanel) cartPanel.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+    
+    if (cartBtn) cartBtn.addEventListener('click', (e) => { e.preventDefault(); openCart(); });
+    if (closeCartBtn) closeCartBtn.addEventListener('click', closeCart);
+    if (cartOverlay) cartOverlay.addEventListener('click', closeCart);
+
+    // -- Додавання в кошик з модалки --
+    const addToCartBtn = document.getElementById('add-to-cart-btn');
+    if (addToCartBtn) {
+        addToCartBtn.addEventListener('click', () => {
+            if (!currentProduct || !currentVariation) return;
+
+            let finalPrice = currentVariation.price;
+            if (currentQty >= 2 && currentVariation.bulk_price) finalPrice = currentVariation.bulk_price;
+            else if (currentVariation.sale_price) finalPrice = currentVariation.sale_price;
+
+            const newItem = {
+                title: currentProduct.title,
+                variation: currentVariation.name || "Стандартна",
+                price: finalPrice,
+                qty: currentQty,
+                art: currentProduct.sku || "Без артикулу",
+                img: currentProduct.image_url
+            };
+
+            myCart.push(newItem);
+            saveCartToStorage();
+            updateCartUI();
+
+            const cartIconBtn = document.querySelector('.cart-btn');
+            if (cartIconBtn) {
+                cartIconBtn.classList.add('cart-bounce');
+                setTimeout(() => cartIconBtn.classList.remove('cart-bounce'), 400);
+            }
+
+            window.closeModal();
+            openCart();
+        });
+    }
+
+    // -- Перемикач доставки (Нова Пошта / Укрпошта) --
+    const deliveryRadios = document.querySelectorAll('input[name="delivery-service"]');
+    const npTypeBlock = document.getElementById('np-type-block');
+    const fopBlock = document.querySelector('.mono-details'); 
+    const branchInput = document.getElementById('client-branch');
+    const ukrHint = document.getElementById('ukrposhta-hint');
+
+    deliveryRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === 'Укрпошта') {
+                if (npTypeBlock) npTypeBlock.style.display = 'none';
+                if (fopBlock) fopBlock.style.display = 'none';
+                if (ukrHint) ukrHint.style.display = 'block';
+                if (branchInput) branchInput.placeholder = "Поштовий індекс (Укрпошта)";
+            } else {
+                if (npTypeBlock) npTypeBlock.style.display = 'block';
+                if (fopBlock) fopBlock.style.display = 'block';
+                if (ukrHint) ukrHint.style.display = 'none';
+                if (branchInput) branchInput.placeholder = "Номер відділення або поштомату";
+            }
+        });
+    });
+
+    // -- Кнопки замовлення --
+    document.getElementById('btn-telegram')?.addEventListener('click', () => sendOrder('telegram'));
+    document.getElementById('btn-viber')?.addEventListener('click', () => sendOrder('viber'));
+});
+
+// --- ЗАВАНТАЖЕННЯ ТОВАРІВ ---
 async function loadProducts() {
-    // 1. Завантажуємо дані з бази
     const { data, error } = await supabase
         .from('products')
         .select('*')
         .eq('in_stock', true)
         .order('created_at', { ascending: false });
 
-    // Перевірка помилок завантаження
     if (error) {
-        productsGrid.innerHTML = `<p style="color:red; text-align:center;">Помилка: ${error.message}</p>`;
+        if(productsGrid) productsGrid.innerHTML = `<p style="color:red; text-align:center;">Помилка: ${error.message}</p>`;
         return;
     }
-    
     if (!data || data.length === 0) {
-        productsGrid.innerHTML = '<p style="text-align:center;">Товари скоро з\'являться!</p>';
+        if(productsGrid) productsGrid.innerHTML = '<p style="text-align:center; grid-column: 1/-1;">Товари скоро з\'являться!</p>';
         return;
     }
 
-    // 2. Зберігаємо товари у глобальний масив та відмальовуємо їх
-    allProducts = data; 
-    renderProducts('all'); 
-
-    // 3. ПЕРЕВІРКА URL НА АРТИКУЛ (?art=...)
-    const urlParams = new URLSearchParams(window.location.search);
-    const artParam = urlParams.get('art'); 
-
-    if (artParam) {
-        // Чистимо параметр від решітки та пробілів
-        const cleanArt = artParam.replace('#', '').trim();
-        
-        // Шукаємо товар (перевіряємо і поле sku, і поле art)
-        const product = allProducts.find(p => {
-            const productSku = p.sku ? String(p.sku).replace('#', '').trim() : '';
-            const productArt = p.art ? String(p.art).replace('#', '').trim() : '';
-            return productSku === cleanArt || productArt === cleanArt;
-        });
-        
-        if (product) {
-            // Викликаємо функцію відкриття модалки, яку ми зробили раніше
-            openProductModal(product.id);
-        } else {
-            console.log(`Товар з артикулом ${cleanArt} не знайдено.`);
-        }
-    }
+    allProducts = data;
+    renderProducts('all');
+    checkUrlParams(); // Перевіряємо посилання тільки після того, як товари завантажені
 }
 
-// Функція малювання карток (з фільтрацією)
 function renderProducts(categoryFilter) {
-    productsGrid.innerHTML = ''; 
+    if (!productsGrid) return;
+    productsGrid.innerHTML = '';
+    
+    // 1. ЧИСТА ФІЛЬТРАЦІЯ (без пошуку по назві)
     let filteredData = allProducts;
-
-    // ФІЛЬТРАЦІЯ
-    if (categoryFilter === 'kids') {
-        // Шукаємо слово "дитяч" у назві (ігноруючи регістр)
-        filteredData = allProducts.filter(p => p.title.toLowerCase().includes('дитяч'));
-    } else if (categoryFilter !== 'all') {
-        // Фільтруємо по точній категорії з бази
+    if (categoryFilter !== 'all') {
         filteredData = allProducts.filter(p => p.category === categoryFilter);
     }
 
@@ -77,6 +169,7 @@ function renderProducts(categoryFilter) {
         return;
     }
 
+    // 2. ВИВІД КАРТОК
     filteredData.forEach(product => {
         const card = document.createElement('div');
         card.className = 'product-card';
@@ -86,13 +179,12 @@ function renderProducts(categoryFilter) {
             priceText = `від ${product.price} ₴`;
         }
 
-        // Якщо це дитячий товар, примусово пишемо "Дитяче", інакше беремо з бази
-        const isKids = product.title.toLowerCase().includes('дитяч');
-        const catName = isKids ? 'Дитяча колекція' : (categoriesDict[product.category] || product.category);
+        // Автоматично беремо красиву назву категорії зі словника
+        const catName = categoriesDict[product.category] || product.category;
 
         card.innerHTML = `
             <div class="product-image-wrap">
-                <img src="${product.image_url}" alt="${product.title}">
+                <img src="${product.image_url}" alt="${product.title}" loading="lazy">
             </div>
             <div class="product-info">
                 <span class="product-category">${catName}</span>
@@ -101,362 +193,234 @@ function renderProducts(categoryFilter) {
                 <button class="buy-btn" data-id="${product.id}">Переглянути</button>
             </div>
         `;
-
-        card.addEventListener('click', () => openProductModal(product.id));
+        card.addEventListener('click', () => window.openProductModal(product.id));
         productsGrid.appendChild(card);
     });
 }
 
-// --- ЛОГІКА БОКОВОГО МЕНЮ ---
-const burgerBtn = document.getElementById('burger-btn');
-const sidebar = document.getElementById('sidebar');
-const closeSidebarBtn = document.getElementById('close-sidebar');
-const overlay = document.getElementById('sidebar-overlay');
-const catLinks = document.querySelectorAll('.cat-link');
-
-function toggleMenu() {
-    sidebar.classList.toggle('open');
-    overlay.classList.toggle('show');
-    if(sidebar.classList.contains('open')) document.body.style.overflow = 'hidden';
-    else document.body.style.overflow = 'auto';
+function checkUrlParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const art = urlParams.get('art');
+    if (art) {
+        const cleanArt = art.replace('#', '').trim();
+        const product = allProducts.find(p => (p.sku && String(p.sku).replace('#', '') === cleanArt));
+        if (product) window.openProductModal(product.id);
+    }
 }
-
-burgerBtn.addEventListener('click', toggleMenu);
-closeSidebarBtn.addEventListener('click', toggleMenu);
-overlay.addEventListener('click', toggleMenu);
-
-// Кліки по категоріях у меню
-catLinks.forEach(link => {
-    link.addEventListener('click', (e) => {
-        e.preventDefault();
-        
-        // Перемикаємо активний клас
-        catLinks.forEach(l => l.classList.remove('active'));
-        e.target.classList.add('active');
-
-        // Отримуємо категорію (all, postil, rushnyky, kids) і фільтруємо
-        const cat = e.target.getAttribute('data-category');
-        renderProducts(cat);
-        
-        // Закриваємо меню після вибору (зручно для мобільних)
-        toggleMenu(); 
-
-        // Скролимо до товарів
-        document.getElementById('catalog').scrollIntoView({ behavior: 'smooth' });
-    });
-});
 
 // --- ЛОГІКА МОДАЛЬНОГО ВІКНА ---
-const modal = document.getElementById('product-modal');
-const closeModalBtn = document.querySelector('.close-modal');
-
-function openProductModal(productId) {
+window.openProductModal = function(productId) {
     const product = allProducts.find(p => p.id == productId);
     if (!product) return;
-   const sku = (product.sku || product.art || "").toString().replace('#', '').trim();
-    
-    // Створюємо новий об'єкт URL на основі поточного (це збереже /site/index.html)
-    const url = new URL(window.location.href);
-    url.searchParams.set('art', sku); // Додаємо ?art=POS-34484
-    
-    // Оновлюємо рядок без перезавантаження
-    window.history.pushState({}, '', url);
-    // Заповнюємо базову інфу
-    document.getElementById('m-img').src = product.image_url;
-    document.getElementById('m-category').textContent = categoriesDict[product.category] || product.category;
-    document.getElementById('m-title').textContent = product.title;
-    document.getElementById('m-sku').textContent = product.sku ? `Артикул: #${product.sku}` : '';
-    document.getElementById('m-material').innerHTML = product.material ? `<strong>Матеріал:</strong> ${product.material}` : '';
-    document.getElementById('m-desc').textContent = product.description || 'Опис відсутній.';
 
-    const varsContainer = document.getElementById('m-variations');
-    const priceDisplay = document.getElementById('m-price');
-    const compsDisplay = document.getElementById('m-components');
-    
+    currentProduct = product;
+    currentQty = 1;
+    document.getElementById('modal-qty').innerText = currentQty;
+
+    document.getElementById('modal-img').src = product.image_url;
+    document.getElementById('modal-title').innerText = product.title;
+    document.getElementById('modal-art').innerText = product.sku ? `Арт: #${product.sku}` : 'Арт: —';
+    document.getElementById('modal-desc').innerText = product.description || '';
+
+    const varsContainer = document.getElementById('modal-variations');
+    const varsWrapper = document.getElementById('variations-wrapper');
     varsContainer.innerHTML = '';
 
-    // Функція, яка оновлює ціну та комплектацію при зміні варіації
-    const selectVariation = (v) => {
-        // Ціна
-        const currentPrice = v.sale_price || v.price;
-        const oldPriceHtml = v.sale_price ? `<del style="color:#A0A0A0; font-size:18px; margin-right:10px;">${v.price} ₴</del>` : '';
-        priceDisplay.innerHTML = `${oldPriceHtml}${currentPrice} ₴`;
-
-        // Комплектація
-        compsDisplay.innerHTML = '';
-        if(v.components && v.components.length > 0) {
-            v.components.forEach(c => {
-                const sizeStr = c.size ? `<span style="font-size:12px; color:#A0A0A0;"> (${c.size})</span>` : '';
-                compsDisplay.innerHTML += `<li><span>${c.name}${sizeStr}</span> <strong>${c.qty} шт</strong></li>`;
-            });
-            document.querySelector('.m-components-wrap').style.display = 'block';
-        } else {
-            document.querySelector('.m-components-wrap').style.display = 'none';
-        }
-    };
-
-    // Рендеримо кнопки варіацій (розмірів)
     if (product.variations && product.variations.length > 0) {
-        if (product.variations.length === 1 && !product.variations[0].name) {
-            // Якщо це "Один розмір" (кнопки не потрібні)
-            selectVariation(product.variations[0]);
-        } else {
-            // Якщо є розміри (Євро, Полуторний і т.д.)
+        if (product.variations.length > 1 || product.variations[0].name) {
+            varsWrapper.style.display = 'block';
             product.variations.forEach((v, index) => {
-                const btn = document.createElement('button');
-                btn.className = `var-btn ${index === 0 ? 'active' : ''}`;
-                btn.textContent = v.name || 'Стандарт';
-                
-                btn.onclick = () => {
-                    document.querySelectorAll('.var-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    selectVariation(v);
+                const chip = document.createElement('div');
+                chip.className = `v-chip ${index === 0 ? 'active' : ''}`;
+                chip.innerText = v.name || 'Стандарт';
+                chip.onclick = () => {
+                    document.querySelectorAll('.v-chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    currentVariation = v;
+                    updateModalDisplayPrice();
                 };
-                varsContainer.appendChild(btn);
+                varsContainer.appendChild(chip);
             });
-            // Вибираємо першу варіацію по замовчуванню
-            selectVariation(product.variations[0]);
+            currentVariation = product.variations[0];
+        } else {
+            varsWrapper.style.display = 'none';
+            currentVariation = product.variations[0];
         }
+    } else {
+        varsWrapper.style.display = 'none';
+        currentVariation = { price: product.price, sale_price: product.sale_price, bulk_price: product.bulk_price };
     }
 
-    // Показуємо модалку
-    modal.classList.add('show');
-    document.body.style.overflow = 'hidden'; // Ховаємо скрол сторінки
+    updateModalDisplayPrice();
+    
+    // ОСЬ ТУТ БУЛА ПОМИЛКА ІЗ ЗАВИСАННЯМ. Тепер вікно відкривається правильно:
+    document.getElementById('product-modal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('art', product.sku || '');
+    window.history.pushState({}, '', url);
+};
+
+window.changeQty = function(delta) {
+    currentQty += delta;
+    if (currentQty < 1) currentQty = 1;
+    document.getElementById('modal-qty').innerText = currentQty;
+    updateModalDisplayPrice();
+};
+
+function updateModalDisplayPrice() {
+    if (!currentVariation) return;
+    const priceElement = document.getElementById('modal-price');
+    const totalElement = document.getElementById('modal-total-price');
+    
+    let finalPrice = currentVariation.price;
+    let isWholesale = false;
+
+    if (currentQty >= 2 && currentVariation.bulk_price) {
+        finalPrice = currentVariation.bulk_price;
+        isWholesale = true;
+    } else if (currentVariation.sale_price) {
+        finalPrice = currentVariation.sale_price;
+    }
+
+    if (isWholesale) {
+        priceElement.innerHTML = `<span style="color: #FF477E; font-size: 14px; border: 1px solid #FF477E; padding: 2px 6px; border-radius: 6px; margin-right: 8px; vertical-align: middle;">Опт</span>${finalPrice} ₴`;
+    } else if (currentVariation.sale_price && currentQty < 2) {
+        priceElement.innerHTML = `<span style="text-decoration: line-through; color: #8e8e93; font-size: 16px; margin-right: 8px;">${currentVariation.price} ₴</span>${finalPrice} ₴`;
+    } else {
+        priceElement.innerHTML = `${finalPrice} ₴`;
+    }
+
+    if (totalElement) {
+        totalElement.innerText = `${finalPrice * currentQty} ₴`;
+    }
 }
 
-// Закриття модалки по кліку на хрестик
-closeModalBtn.addEventListener('click', () => {
-    modal.classList.remove('show');
-    document.body.style.overflow = 'auto';
-
-    // ПРИБИРАЄМО АРТИКУЛ З ПОСИЛАННЯ
+window.closeModal = function() {
+    document.getElementById('product-modal').classList.remove('show');
+    document.body.style.overflow = '';
     const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
     window.history.pushState({ path: cleanUrl }, '', cleanUrl);
+};
+
+// Закриття по кліку на темний фон
+document.getElementById('product-modal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'product-modal') window.closeModal();
 });
 
-// Також варто додати це при кліку на фон (overlay)
-modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
-        modal.classList.remove('show');
-        document.body.style.overflow = 'auto';
-        
-        const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-        window.history.pushState({ path: cleanUrl }, '', cleanUrl);
-    }
-});
-
-// Закриття модалки по кліку на темний фон навколо
-modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeModal();
-});
-
-function closeModal() {
-    modal.classList.remove('show');
-    document.body.style.overflow = 'auto'; // Повертаємо скрол
+// --- ЛОГІКА КОШИКА ---
+function saveCartToStorage() {
+    localStorage.setItem('shop_cart', JSON.stringify(myCart));
 }
 
-// --- ЛОГІКА КОШИКА ТА ВІДПРАВКА ЗАМОВЛЕННЯ ---
-const cartOverlay = document.getElementById('cart-overlay');
-const cartPanel = document.getElementById('cart-panel');
-const closeCartBtn = document.getElementById('close-cart');
-const cartBtn = document.querySelector('.cart-btn'); 
+function updateCartUI() {
+    const cartItemsContainer = document.getElementById('cart-items');
+    const cartCountElements = document.querySelectorAll('.cart-count');
+    const cartTotalElement = document.getElementById('cart-total-sum');
 
-// Безпечне відкриття кошика (перевіряємо, чи є він на сторінці)
-if (cartBtn && cartOverlay && cartPanel) {
-    cartBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        cartOverlay.classList.add('show');
-        cartPanel.classList.add('open');
-    });
-}
+    if (!cartItemsContainer) return;
 
-function closeCart() {
-    if(cartOverlay) cartOverlay.classList.remove('show');
-    if(cartPanel) cartPanel.classList.remove('open');
-}
-if (closeCartBtn) closeCartBtn.addEventListener('click', closeCart);
-if (cartOverlay) cartOverlay.addEventListener('click', closeCart);
-
-// --- РЕАЛЬНИЙ КОШИК ---
-let myCart = []; 
-
-function renderCart() {
-    const cartItemsDiv = document.getElementById('cart-items');
-    const totalSumEl = document.getElementById('cart-total-sum');
-    const badge = document.querySelector('.cart-count'); // Виправлено на твій клас
-    
-    if (!cartItemsDiv || !totalSumEl) return;
+    cartItemsContainer.innerHTML = '';
+    let total = 0;
+    let totalQty = 0;
 
     if (myCart.length === 0) {
-        cartItemsDiv.innerHTML = '<p style="text-align:center; color: #7f8fa6; margin-top: 20px;">Кошик порожній 😔</p>';
-        totalSumEl.innerText = '0 ₴';
-        if(badge) badge.innerText = '0';
-        return;
+        cartItemsContainer.innerHTML = '<p style="text-align:center; color: #8e8e93; margin-top: 40px; font-weight: bold;">Кошик порожній 😔</p>';
+    } else {
+        myCart.forEach((item, index) => {
+            const price = parseInt(item.price) || 0;
+            const qty = item.qty || 1;
+            total += price * qty;
+            totalQty += qty;
+
+            const itemHtml = `
+                <div class="cart-item-card" style="display: flex; gap: 12px; background: #fff; padding: 12px; border-radius: 16px; margin-bottom: 10px; border: 1px solid #f0f0f0;">
+                    <img src="${item.img}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 12px;">
+                    <div class="cart-item-info" style="flex: 1;">
+                        <div class="cart-item-title" style="font-weight: 700; font-size: 14px; margin-bottom: 2px;">${item.title}</div>
+                        <div style="font-size: 11px; color: #8e8e93;">Арт: ${item.art} • ${item.variation}</div>
+                        <div style="display:flex; justify-content: space-between; align-items:center; margin-top: 4px;">
+                            <div style="font-weight: 800; font-size: 16px;">${price} ₴</div>
+                            <div style="font-size: 13px; color: #8e8e93; font-weight: bold;">${qty} шт.</div>
+                        </div>
+                    </div>
+                    <button onclick="removeFromCart(${index})" style="background:none; border:none; color:#FF477E; font-size:18px; cursor:pointer; padding:5px;">✖</button>
+                </div>
+            `;
+            cartItemsContainer.insertAdjacentHTML('beforeend', itemHtml);
+        });
     }
 
-    let html = '';
-    let total = 0;
-
-    myCart.forEach((item, index) => {
-        total += item.price;
-        html += `
-            <div class="cart-item">
-                <img src="${item.img}" alt="Товар" class="cart-item-img">
-                <div class="cart-item-info">
-                    <h4>${item.title}</h4>
-                    <p>Арт: ${item.art}</p>
-                    <p>Варіація: <strong>${item.variation}</strong></p>
-                    <div class="price">${item.price} ₴</div>
-                </div>
-                <button class="remove-item" onclick="window.removeFromCart(${index})">✖</button>
-            </div>
-        `;
-    });
-
-    cartItemsDiv.innerHTML = html;
-    totalSumEl.innerText = total + ' ₴';
-    if(badge) badge.innerText = myCart.length;
+    cartCountElements.forEach(el => el.textContent = totalQty);
+    if (cartTotalElement) cartTotalElement.textContent = `${total} ₴`;
 }
 
-// Робимо функцію глобальною, щоб вона працювала в module
 window.removeFromCart = function(index) {
     myCart.splice(index, 1);
-    renderCart();
-}
+    saveCartToStorage();
+    updateCartUI();
+};
 
-renderCart();
-
-// --- ВІДПРАВКА В МЕСЕНДЖЕР ---
+// --- ВІДПРАВКА ЗАМОВЛЕННЯ ---
 window.sendOrder = function(platform) {
-    const name = document.getElementById('client-name').value.trim();
-    const phone = document.getElementById('client-phone').value.trim();
-    const city = document.getElementById('client-city').value.trim();
-    const branch = document.getElementById('client-branch').value.trim();
+    const nameInput = document.getElementById('client-name');
+    const phoneInput = document.getElementById('client-phone');
+    const cityInput = document.getElementById('client-city');
+    const branchInput = document.getElementById('client-branch');
+
+    const name = nameInput ? nameInput.value.trim() : '';
+    const phone = phoneInput ? phoneInput.value.trim() : '';
+    const city = cityInput ? cityInput.value.trim() : '';
+    const branch = branchInput ? branchInput.value.trim() : '';
 
     if (!name || !phone) {
         alert("Будь ласка, введіть ПІБ та номер телефону!");
         return;
     }
-
     if (myCart.length === 0) {
         alert("Кошик порожній!");
         return;
     }
 
-    // Твій номер телефону у форматі 380... (без плюса)
-    const myPhone = "380984165936"; // ЗАМІНИ НА СВІЙ НОМЕР
-    const tgUsername = "AllaVerba1"; // ЗАМІНИ НА СВІЙ ТЕЛЕГРАМ (без @)
+    const deliveryService = document.querySelector('input[name="delivery-service"]:checked')?.value || 'Нова Пошта';
+    const deliveryType = document.querySelector('input[name="np-type"]:checked')?.value || 'Відділення';
 
-    // Формуємо список товарів
     let itemsText = "";
     let totalSum = 0;
     myCart.forEach((item, index) => {
-        itemsText += `${index + 1}. ${item.title} (${item.variation}) — ${item.price} ₴\n`;
-        itemsText += `   Артикул: ${item.art}\n`;
-        totalSum += parseInt(item.price);
+        const itemQty = item.qty || 1;
+        itemsText += `${index + 1}. ${item.title} ${item.variation !== 'Стандартна' ? '('+item.variation+')' : ''} — ${item.price} ₴ x ${itemQty} шт\n`;
+        itemsText += `   Арт: ${item.art}\n`;
+        totalSum += item.price * itemQty;
     });
 
-    // Формуємо текст повідомлення
     let message = `🛍️ НОВЕ ЗАМОВЛЕННЯ\n\n`;
     message += `👤 Покупець: ${name}\n`;
-    message += `📞 Тел: ${phone}\n`;
-    message += `📍 Доставка: ${city}, №${branch}\n\n`;
-    message += `📦 Товари:\n${itemsText}\n`;
-    message += `💰 Разом до оплати: ${totalSum} ₴\n\n`;
+    message += `📞 Тел: ${phone}\n\n`;
     
-    // Додаємо посилання на сайт, щоб ви бачили, звідки прийшли
-    message += `🔗 Посилання: ${window.location.href}`;
+    if (deliveryService === 'Укрпошта') {
+        message += `📍 Доставка: Укрпошта\n`;
+        message += `   Місто/Село: ${city}\n`;
+        message += `   Індекс: ${branch}\n`;
+        message += `💳 Оплата: При отриманні (Без передплати)\n\n`;
+    } else {
+        message += `📍 Доставка: Нова Пошта (${deliveryType})\n`;
+        message += `   Місто: ${city}\n`;
+        message += `   №: ${branch}\n`;
+        message += `💳 Оплата: За реквізитами ФОП\n\n`;
+    }
+
+    message += `📦 Товари:\n${itemsText}\n`;
+    message += `💰 Разом: ${totalSum} ₴\n`;
 
     const encodedMessage = encodeURIComponent(message);
-    
-    // ВСТАВ СВОЇ ДАНІ
-    const telegramManagerNick = "AllaVerba1"; 
-    const viberManagerPhone = "380984165936"; 
+    const myPhone = "380984165936"; 
+    const tgUsername = "AllaVerba1"; 
 
-    if (messenger === 'telegram') {
-        window.open(`https://t.me/${telegramManagerNick}?text=${encodedText}`, '_blank');
-    } else if (messenger === 'viber') {
-        window.open(`viber://chat?number=%2B${viberManagerPhone}&draft=${encodedText}`, '_blank');
+    if (platform === 'telegram') {
+        window.open(`https://t.me/${tgUsername}?text=${encodedMessage}`, '_blank');
+    } else if (platform === 'viber') {
+        window.open(`https://viber.click/${myPhone}/?text=${encodedMessage}`, '_blank');
     }
-}
-
-// --- ДОДАВАННЯ ТОВАРУ В КОШИК ---
-const modalAddToCartBtn = document.getElementById('modal-add-to-cart');
-
-if (modalAddToCartBtn) {
-    modalAddToCartBtn.addEventListener('click', () => {
-        const title = document.getElementById('m-title').innerText;
-        const priceText = document.getElementById('m-price').innerText;
-        const price = parseInt(priceText.replace(/\D/g, ''));
-        const img = document.getElementById('m-img').src;
-        
-        let art = document.getElementById('m-sku').innerText;
-        art = art.replace('Артикул:', '').trim(); 
-        
-        const activeVariationBtn = document.querySelector('#m-variations .active');
-        const variation = activeVariationBtn ? activeVariationBtn.innerText : "Стандартна";
-
-        const newItem = {
-            title: title,
-            variation: variation,
-            price: price,
-            art: art || "Без артикулу",
-            img: img
-        };
-
-        myCart.push(newItem);
-        renderCart();
-        // --- Додаємо АНІМАЦІЮ СТРИБКА ---
-        const cartIconBtn = document.querySelector('.cart-btn');
-        if (cartIconBtn) {
-            cartIconBtn.classList.add('cart-bounce');
-            // Забираємо клас через 400 мілісекунд, щоб анімація могла спрацювати наступного разу
-            setTimeout(() => {
-                cartIconBtn.classList.remove('cart-bounce');
-            }, 400);
-        }
-        
-        // Закриваємо модалку товару
-        const productModal = document.getElementById('product-modal');
-        if (productModal) {
-            productModal.classList.remove('show');
-            document.body.style.overflow = 'auto'; 
-        }
-        
-        // Відкриваємо бокову панель кошика
-        if (cartOverlay && cartPanel) {
-            cartOverlay.classList.add('show');
-            cartPanel.classList.add('open');
-        }
-    });
-}
-
-// --- ЛОГІКА ВІДКРИТТЯ МОДАЛКИ ЗА АРТИКУЛОМ З URL ---
-async function checkUrlParams() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const art = urlParams.get('art');
-
-    if (art) {
-        // Очищаємо артикул від решітки, якщо користувач її ввів у посилання
-        const cleanArt = art.replace('#', '').trim();
-        
-        // Шукаємо товар у масиві (перевіряємо і sku, і art для надійності)
-        const product = allProducts.find(p => 
-            (p.sku && p.sku.replace('#', '') === cleanArt) || 
-            (p.art && p.art.replace('#', '') === cleanArt)
-        );
-        
-        if (product) {
-            // Викликаємо твою функцію за ID
-            openProductModal(product.id);
-        } else {
-            console.log("Товар з артикулом " + cleanArt + " не знайдено в базі.");
-        }
-    }
-}
-
-// Запускаємо перевірку після завантаження товарів
-window.addEventListener('load', checkUrlParams);
-// Запуск
-
-loadProducts();
+};
