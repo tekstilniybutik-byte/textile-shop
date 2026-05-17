@@ -74,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cartOverlay) cartOverlay.addEventListener('click', closeCart);
 
     // -- Додавання в кошик з модалки --
+    // -- Додавання в кошик з модалки --
     const addToCartBtn = document.getElementById('add-to-cart-btn');
     if (addToCartBtn) {
         addToCartBtn.addEventListener('click', () => {
@@ -83,13 +84,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentQty >= 2 && currentVariation.bulk_price) finalPrice = currentVariation.bulk_price;
             else if (currentVariation.sale_price) finalPrice = currentVariation.sale_price;
 
+            // ГЕНЕРУЄМО ПОСИЛАННЯ НА ТОВАР
+            const cleanArt = currentProduct.sku ? String(currentProduct.sku).replace('#', '') : '';
+            const productLink = window.location.origin + window.location.pathname + '?art=' + cleanArt;
+
             const newItem = {
                 title: currentProduct.title,
                 variation: currentVariation.name || "Стандартна",
                 price: finalPrice,
                 qty: currentQty,
                 art: currentProduct.sku || "Без артикулу",
-                img: currentProduct.image_url
+                img: currentProduct.image_url,
+                link: productLink // Зберігаємо посилання в кошик
             };
 
             myCart.push(newItem);
@@ -102,8 +108,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => cartIconBtn.classList.remove('cart-bounce'), 400);
             }
 
+            // ПРИБИРАЄМО ЛАГИ: Спочатку закриваємо модалку...
             window.closeModal();
-            openCart();
+            
+            // ...і лише через 350 мілісекунд відкриваємо кошик (щоб телефон не "задихався" від двох анімацій)
+            setTimeout(() => {
+                openCart();
+            }, 350);
         });
     }
 
@@ -408,6 +419,7 @@ window.removeFromCart = function(index) {
 };
 
 // --- ВІДПРАВКА ЗАМОВЛЕННЯ ---
+// --- ВІДПРАВКА ЗАМОВЛЕННЯ ---
 window.sendOrder = function(platform) {
     const nameInput = document.getElementById('client-name');
     const phoneInput = document.getElementById('client-phone');
@@ -437,6 +449,7 @@ window.sendOrder = function(platform) {
         const itemQty = item.qty || 1;
         itemsText += `${index + 1}. ${item.title} ${item.variation !== 'Стандартна' ? '('+item.variation+')' : ''} — ${item.price} ₴ x ${itemQty} шт\n`;
         itemsText += `   Арт: ${item.art}\n`;
+        if (item.link) itemsText += `   🔗 Посилання: ${item.link}\n`; // ДОДАЄМО ПОСИЛАННЯ В ТЕКСТ
         totalSum += item.price * itemQty;
     });
 
@@ -466,6 +479,13 @@ window.sendOrder = function(platform) {
     if (platform === 'telegram') {
         window.open(`https://t.me/${tgUsername}?text=${encodedMessage}`, '_blank');
     } else if (platform === 'viber') {
-        window.open(`https://viber.click/${myPhone}/?text=${encodedMessage}`, '_blank');
+        // НАДІЙНИЙ СПОСІБ ДЛЯ VIBER: копіюємо текст у буфер обміну і відкриваємо чат
+        navigator.clipboard.writeText(message).then(() => {
+            alert("✅ Дані замовлення збережено!\n\nЗараз відкриється Viber. Просто затисніть поле вводу повідомлення і натисніть «Вставити».");
+            window.location.href = `viber://chat?number=%2B${myPhone}`;
+        }).catch(() => {
+            // Резервний варіант, якщо телефон заблокував копіювання
+            window.location.href = `viber://chat?number=%2B${myPhone}`;
+        });
     }
 };

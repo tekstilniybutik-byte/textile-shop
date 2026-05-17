@@ -1198,7 +1198,9 @@ footer {
         animation: none !important;
         background-size: 100% 100% !important;
     }
-    
+    /* Відгуки на телефоні */
+    .review-card img { height: 85px; } /* Робимо трохи меншими */
+    .marquee-track { gap: 15px; }
     /* 2. Зменшуємо силу розмиття "скла", щоб відеокарта телефону не "задихалася" */
     .product-card, 
     .contact-card, 
@@ -1215,4 +1217,73 @@ footer {
         box-shadow: 0 12px 32px rgba(255, 107, 139, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
         border-color: rgba(255, 71, 126, 0.25) !important;
     }
+}
+/* Вимикаємо розмиття фону під кошиком на телефоні (головна причина лагів при відкритті) */
+    .cart-overlay {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(0, 0, 0, 0.7) !important;
+    }
+
+    .reviews-section {
+    margin-top: 40px;
+    margin-bottom: 20px;
+    padding: 0 10px;
+}
+
+.reviews-marquee {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    padding: 20px 0;
+    /* Ефект розмиття по краях екрану (створює ілюзію нескінченності) */
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.marquee-track {
+    display: flex;
+    gap: 25px;
+    width: max-content;
+    /* Анімація триває 20 секунд. Якщо буде зашвидко — змініть 20s на 30s */
+    animation: scrollMarquee 20s linear infinite;
+}
+
+/* При наведенні стрічка зупиняється, щоб зручно було читати */
+.marquee-track:hover {
+    animation-play-state: paused;
+}
+
+.review-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 8px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 71, 126, 0.2);
+    box-shadow: 0 10px 25px rgba(255, 107, 139, 0.08);
+    flex-shrink: 0;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+}
+
+/* Коли наводимо мишку — відгук підстрибує і збільшується */
+.review-card:hover {
+    transform: scale(1.05) translateY(-5px);
+    box-shadow: 0 15px 35px rgba(255, 71, 126, 0.18);
+    border-color: rgba(255, 71, 126, 0.5);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.review-card img {
+    height: 110px; /* Оптимальна висота для скріншотів коментарів */
+    width: auto;
+    border-radius: 12px;
+    object-fit: contain;
+}
+
+@keyframes scrollMarquee {
+    0% { transform: translateX(0); }
+    /* Прокручуємо рівно половину (оригінали), щоб дублікати стали на їх місце непомітно */
+    100% { transform: translateX(calc(-50% - 12.5px)); } 
 }
