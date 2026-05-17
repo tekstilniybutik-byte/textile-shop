@@ -91,7 +91,17 @@ a { text-decoration: none; color: inherit; }
 .product-card:hover .product-image-wrap img { 
     transform: scale(1.08); 
 }
-
+/* --- СТИЛЬ ДЛЯ МАТЕРІАЛУ В КАРТЦІ --- */
+.product-material {
+    font-size: 13px;
+    color: var(--text-gray);
+    margin-bottom: 12px; /* Відступ від ціни */
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0.8;
+}
 /* Інформація про товар */
 .product-info { 
     padding: 25px; 
@@ -877,12 +887,31 @@ footer {
 }
 
 /* ГОЛОВНА ПАНЕЛЬ */
+/* ГОЛОВНА ПАНЕЛЬ КОШИКА */
 .cart-panel {
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    background: #F5F5F7 !important; /* Фон як у Apple/Mono */
+    
+    /* ВИПРАВЛЕННЯ ДЛЯ ТЕЛЕФОНІВ: Динамічна висота екрану */
+    height: 100%; 
+    height: 100dvh; 
+    
+    background: #F5F5F7 !important; 
     overflow: hidden;
+    
+    /* Забороняє скролити сам сайт на фоні, коли ви гортаєте кошик */
+    overscroll-behavior: contain; 
+}
+
+/* ОБЛАСТЬ СКРОЛУ */
+.cart-scrollable-content {
+    flex: 1 1 auto; /* Дозволяємо області адаптуватися */
+    min-height: 0; /* КРИТИЧНИЙ ХАК: Без цього flexbox блокує скрол на телефонах */
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 15px;
+    padding-bottom: 30px;
+    -webkit-overflow-scrolling: touch; /* Вмикає фірмовий ідеально плавний скрол на iPhone/iPad */
 }
 
 .cart-header {
@@ -1101,4 +1130,89 @@ footer {
     font-weight: 700;
     margin-top: 20px;
     cursor: pointer;
+}
+
+/* --- СТИЛЬНИЙ РЯДОК ПОШУКУ (ГЛАСМОРФІЗМ) --- */
+.search-container {
+    max-width: 550px;
+    margin: 0 auto 40px auto;
+    padding: 0 10px;
+}
+
+.search-wrapper {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 71, 126, 0.25);
+    border-radius: 20px;
+    padding: 6px 18px;
+    box-shadow: 0 8px 32px rgba(255, 107, 139, 0.04);
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+/* Ефект коли клієнт натискає на пошук */
+.search-wrapper:focus-within {
+    border-color: rgba(255, 71, 126, 0.6);
+    box-shadow: 0 15px 35px rgba(255, 71, 126, 0.12);
+    background: #ffffff;
+    transform: translateY(-2px); /* Рядок злегка підстрибує */
+}
+
+#search-input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 12px 0;
+    font-size: 16px;
+    color: var(--text-dark);
+    outline: none;
+    font-weight: 600;
+}
+
+#search-input::placeholder {
+    color: var(--text-gray);
+    opacity: 0.6;
+    font-weight: 500;
+}
+
+/* Кнопка стерти пошук (хрестик) */
+.clear-search-btn {
+    background: none;
+    border: none;
+    color: var(--text-gray);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 5px;
+    display: none; /* З'являється тільки коли введено текст */
+    transition: color 0.2s;
+}
+.clear-search-btn:hover {
+    color: var(--primary);
+}
+/* --- ОПТИМІЗАЦІЯ ДЛЯ ТЕЛЕФОНІВ (АНТИ-ЛАГ) --- */
+@media (max-width: 768px) {
+    /* 1. Вимикаємо важку анімацію фону (залишаємо просто красивий статичний градієнт) */
+    body {
+        animation: none !important;
+        background-size: 100% 100% !important;
+    }
+    
+    /* 2. Зменшуємо силу розмиття "скла", щоб відеокарта телефону не "задихалася" */
+    .product-card, 
+    .contact-card, 
+    .search-wrapper {
+        backdrop-filter: blur(5px) !important;
+        -webkit-backdrop-filter: blur(5px) !important;
+        /* Робимо фон трохи щільнішим, щоб компенсувати менше розмиття */
+        background: rgba(255, 255, 255, 0.95) !important; 
+    }
+    
+    /* 3. Вимикаємо ефект підстрибування при скролі (hover на телефонах часто залипає) */
+    .product-card:hover {
+        transform: none !important;
+        box-shadow: 0 12px 32px rgba(255, 107, 139, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+        border-color: rgba(255, 71, 126, 0.25) !important;
+    }
 }

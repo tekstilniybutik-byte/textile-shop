@@ -15,6 +15,9 @@ let currentProduct = null;
 let currentVariation = null;
 let currentQty = 1;
 
+// ОСЬ ЦЕЙ РЯДОК БУВ ПРОПУЩЕНИЙ:
+let currentCategory = 'all'; 
+
 // --- ІНІЦІАЛІЗАЦІЯ ПРИ ЗАВАНТАЖЕННІ ---
 document.addEventListener('DOMContentLoaded', () => {
     loadProducts();
@@ -156,20 +159,38 @@ async function loadProducts() {
 
 function renderProducts(categoryFilter) {
     if (!productsGrid) return;
+    currentCategory = categoryFilter; // Запам'ятовуємо, яку категорію обрав користувач
     productsGrid.innerHTML = '';
     
-    // 1. ЧИСТА ФІЛЬТРАЦІЯ (без пошуку по назві)
+    // Отримуємо текст із пошуку
+    const searchInput = document.getElementById('search-input');
+    const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    
+    // Показуємо або ховаємо хрестик очищення тексту
+    const clearBtn = document.getElementById('clear-search');
+    if (clearBtn) {
+        clearBtn.style.display = searchQuery ? 'block' : 'none';
+    }
+
+    // 1. ФІЛЬТРАЦІЯ ЗА КАТЕГОРІЄЮ
     let filteredData = allProducts;
     if (categoryFilter !== 'all') {
         filteredData = allProducts.filter(p => p.category === categoryFilter);
     }
 
-    if (filteredData.length === 0) {
-        productsGrid.innerHTML = '<p style="text-align:center; grid-column: 1/-1;">У цій категорії поки немає товарів.</p>';
-        return;
+    // 2. ДОДАТКОВА ФІЛЬТРАЦІЯ ЗА ПОШУКОВИМ ЗАПИТОМ
+    if (searchQuery) {
+        filteredData = filteredData.filter(p => 
+            p.title.toLowerCase().includes(searchQuery) || 
+            (p.sku && String(p.sku).toLowerCase().includes(searchQuery)) ||
+            (p.material && p.material.toLowerCase().includes(searchQuery))
+        );
     }
 
-    // 2. ВИВІД КАРТОК
+    if (filteredData.length === 0) {
+        productsGrid.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color: #8e8e93; margin-top: 20px; font-weight: 500;">Нічого не знайдено за вашим запитом 🔍</p>';
+        return;
+    }
     filteredData.forEach(product => {
         const card = document.createElement('div');
         card.className = 'product-card';
@@ -179,8 +200,10 @@ function renderProducts(categoryFilter) {
             priceText = `від ${product.price} ₴`;
         }
 
-        // Автоматично беремо красиву назву категорії зі словника
         const catName = categoriesDict[product.category] || product.category;
+        
+        // НОВЕ: Перевіряємо чи вказаний матеріал, і створюємо для нього красивий блок
+        const materialHTML = product.material ? `<div class="product-material">🧵 ${product.material}</div>` : '';
 
         card.innerHTML = `
             <div class="product-image-wrap">
@@ -189,14 +212,36 @@ function renderProducts(categoryFilter) {
             <div class="product-info">
                 <span class="product-category">${catName}</span>
                 <h3 class="product-title">${product.title}</h3>
-                <div class="product-price">${priceText}</div>
+                ${materialHTML} <div class="product-price">${priceText}</div>
                 <button class="buy-btn" data-id="${product.id}">Переглянути</button>
             </div>
         `;
         card.addEventListener('click', () => window.openProductModal(product.id));
         productsGrid.appendChild(card);
     });
-}
+    }
+
+// СЛУХАЧІ ПОДІЙ ДЛЯ РЯДКА ПОШУКУ
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('search-input');
+    const clearSearchBtn = document.getElementById('clear-search');
+
+    if (searchInput) {
+        // Пошук спрацьовує миттєво під час введення кожної літери (без перезавантаження)
+        searchInput.addEventListener('input', () => {
+            renderProducts(currentCategory);
+        });
+    }
+
+    if (clearSearchBtn) {
+        // Очищення рядка при натисканні на хрестик
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            renderProducts(currentCategory);
+            searchInput.focus(); // Повертаємо фокус на поле введення
+        });
+    }
+});
 
 function checkUrlParams() {
     const urlParams = new URLSearchParams(window.location.search);
