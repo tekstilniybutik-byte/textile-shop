@@ -1440,6 +1440,7 @@ footer {
 }
 
 /* Рамочка-скло для кожного відео */
+/* --- ОНОВЛЕНИЙ СЛАЙД ВІДЕО З ПУЛЬСАЦІЄЮ --- */
 .video-slide {
     flex: 0 0 calc(100% / 3 - 14px); /* На комп'ютері показуємо рівно 3 відео */
     scroll-snap-align: center; /* Центрує відео при гортанні */
@@ -1450,12 +1451,36 @@ footer {
     border-radius: 28px;
     padding: 10px;
     box-shadow: 0 15px 35px rgba(255, 107, 139, 0.08);
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    
+    /* МАГІЯ ПУЛЬСАЦІЇ: Анімація триває 3 секунди, рухається хвилеподібно та безкінечно */
+    animation: videoGlowPulse 3s ease-in-out infinite;
+    will-change: transform, box-shadow, border-color; 
 }
 
+/* При наведенні мишки збільшення плавно зупиняє пульсацію, фіксуючи яскраве сяйво */
 .video-slide:hover {
     transform: translateY(-5px);
-    box-shadow: 0 20px 45px rgba(255, 71, 126, 0.15);
+    box-shadow: 0 20px 45px rgba(255, 71, 126, 0.2) !important;
+    border-color: rgba(255, 71, 126, 0.7) !important;
+    animation-play-state: paused; /* Зупиняє пульс, коли клієнт взаємодіє з відео */
+}
+
+/* ЕЛЕГАНТНА ПУЛЬСАЦІЯ РОЖЕВОГО СЯЙВА (Ефект "дихання") */
+@keyframes videoGlowPulse {
+    0% {
+        box-shadow: 0 15px 35px rgba(255, 107, 139, 0.06);
+        border-color: rgba(255, 71, 126, 0.25);
+    }
+    50% {
+        /* У піку анімації рамочка стає чіткішою, а рожева тінь навколо м'яко розширюється */
+        box-shadow: 0 15px 40px rgba(255, 71, 126, 0.18);
+        border-color: rgba(255, 71, 126, 0.55);
+    }
+    100% {
+        box-shadow: 0 15px 35px rgba(255, 107, 139, 0.06);
+        border-color: rgba(255, 71, 126, 0.25);
+    }
 }
 
 /* Саме відео в пропорціях TikTok */
@@ -1496,14 +1521,366 @@ footer {
 .prev-btn { left: -20px; }
 .next-btn { right: -20px; }
 
-/* --- АДАПТАЦІЯ КАРОСЕЛІ ДЛЯ ТЕЛЕФОНІВ --- */
-@media (max-width: 900px) {
-    .video-slide { flex: 0 0 calc(100% / 2 - 10px); } /* 2 відео на планшеті */
+/* Робимо так, щоб було зрозуміло, що відео можна клікати */
+.video-slide video {
+    cursor: pointer;
 }
+
 @media (max-width: 600px) {
-    /* На телефоні показуємо 1 відео по центру (85% екрану), а з боків визирають наступні */
-    .video-slide { flex: 0 0 82%; } 
-    /* Ховаємо стрілочки, бо на телефоні гортають пальцем */
+    .video-slide { 
+        /* Відео займає 80% екрану, щоб з боків ідеально виглядали сусіди */
+        flex: 0 0 80%; 
+        /* МАГІЯ СТАБІЛЬНОСТІ: Жорстка зупинка на кожному відео (не дає пролетіти повз) */
+        scroll-snap-stop: always; 
+    } 
     .prev-btn, .next-btn { display: none; } 
-    .video-track { padding: 15px 5px; gap: 15px; scroll-padding: 0 9%; }
+    
+    /* Ідеальне центрування за рахунок відступів по 10% з країв */
+    .video-track { 
+        padding: 15px 10%; 
+        gap: 15px; 
+        scroll-padding: 0 10%; 
+    }
+}
+/* --- ПРЕМІУМ ВХІДНИЙ ЕКРАН (EDITORIAL INTRO GATE) --- */
+.intro-gate {
+    position: relative;
+    width: 100%;
+    height: 100vh; /* Займає рівно 100% висоти екрану при відкритті */
+    height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #1e1e1e;
+}
+
+/* Мозаїчна сітка з картинок */
+.intro-grid-bg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 вертикальні колони на ПК */
+    gap: 0;
+}
+
+.intro-grid-item {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    /* Ефект легкого наближення картинок при завантаженні */
+    animation: introFadeZoom 10s ease-out forwards;
+    opacity: 0.85;
+}
+
+/* Робимо асиметричний час старту для кожної картинки, щоб сітка "жила" */
+.intro-grid-item.item-1 { animation-delay: 0s; }
+.intro-grid-item.item-2 { animation-delay: 0.5s; }
+.intro-grid-item.item-3 { animation-delay: 0.2s; }
+.intro-grid-item.item-4 { animation-delay: 0.7s; }
+
+/* Напівпрозорий дорогий градієнт-вуаль поверх картинок */
+.intro-gate-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.45) 0%, rgba(255, 71, 126, 0.2) 100%);
+    backdrop-filter: blur(2px); /* Легке-легке преміальне розмиття */
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 1;
+}
+
+/* Контент у центрі */
+.intro-gate-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 0 20px;
+    max-width: 850px;
+}
+
+/* Підзаголовок над брендом */
+.brand-sub-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: 6px; /* Великі розкішні відступи між літерами */
+    display: block;
+    margin-bottom: 15px;
+    opacity: 0.9;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+/* Головний бренд-напис */
+.brand-main-title {
+    font-size: 68px;
+    font-weight: 300; /* Тонкий, елегантний шрифт */
+    color: #FFFFFF;
+    letter-spacing: 4px;
+    line-height: 1.1;
+    margin-bottom: 25px;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    font-family: 'Times New Roman', Georgia, serif; /* Дорогий журнальний стиль */
+}
+
+.brand-description {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 45px;
+    font-weight: 400;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+/* Люксова велика кнопка */
+.intro-gate-btn {
+    background: #FFFFFF;
+    color: #000000;
+    padding: 18px 45px;
+    border-radius: 40px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    display: inline-block;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.intro-gate-btn:hover {
+    background: var(--primary); /* При наведенні плавно заливається вашим фірмовим рожевим */
+    color: #FFFFFF;
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 15px 35px rgba(255, 71, 126, 0.4);
+}
+
+/* Ефект плавного наближення картинок */
+@keyframes introFadeZoom {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.08); }
+}
+
+/* --- АДАПТАЦІЯ СІТКИ ДЛЯ ТЕЛЕФОНІВ (АНТИ-ЛАГ) --- */
+@media (max-width: 768px) {
+    .intro-grid-bg {
+        /* На телефоні 4 колонки в ряд будуть занадто вузькими, тому робимо красивий квадратний колаж 2х2 */
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+    }
+    .intro-grid-item {
+        animation: none !important; /* Повністю вимикаємо рух картинок на телефонах, щоб не було лагів */
+    }
+    .brand-main-title {
+        font-size: 42px; /* Зменшуємо напис для екрану смартфона */
+        letter-spacing: 2px;
+    }
+    .brand-sub-title {
+        font-size: 11px;
+        letter-spacing: 3px;
+    }
+    .brand-description {
+        font-size: 15px;
+        margin-bottom: 35px;
+    }
+    .intro-gate-btn {
+        padding: 16px 35px;
+        width: 85%; /* Кнопка зручна під великий палець */
+    }
+}
+/* --- ПРЕМІУМ ВХІДНИЙ ЕКРАН "ПАЗЛ" (EDITORIAL PUZZLE GRID) --- */
+/* --- ЛЮКС ЗАСТАВКА-ПАЗЛ (ОДНЕ ФОТО НА ВСІ ЧАСТИНИ) --- */
+.intro-puzzle-gate {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 9999; /* Поверх абсолютно всього сайту */
+    overflow: hidden;
+    background: #0d0d0d;
+    transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1), opacity 1.2s ease;
+}
+
+/* Клас від'їзду завіси вгору */
+.intro-puzzle-gate.hidden-gate {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Сітка 2х2 */
+.puzzle-grid {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    z-index: 1;
+}
+
+/* Налаштування для кожної частинки пазлу */
+.puzzle-piece {
+    background-image: url('alla.png');
+    background-size: 100vw 100vh; /* Розтягуємо на весь екран, щоб кути збігалися */
+    background-repeat: no-repeat;
+    opacity: 0;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    will-change: transform, opacity; /* Готуємо відеокарту до анімації */
+}
+
+/* Магічне розрізання картинки по кутах + індивідуальні траєкторії літання */
+.puzzle-piece.item-1 {
+    background-position: left top;
+    animation: puzzleLeftTop 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    animation-delay: 0.1s;
+}
+.puzzle-piece.item-2 {
+    background-position: right top;
+    animation: puzzleRightTop 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    animation-delay: 0.3s;
+}
+.puzzle-piece.item-3 {
+    background-position: left bottom;
+    animation: puzzleLeftBottom 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    animation-delay: 0.2s;
+}
+.puzzle-piece.item-4 {
+    background-position: right bottom;
+    animation: puzzleRightBottom 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    animation-delay: 0.4s;
+}
+
+/* Ідеально плавні 3D-зсуви з кутів до центру */
+@keyframes puzzleLeftTop {
+    0% { transform: translate(-150px, -150px); opacity: 0; }
+    100% { transform: translate(0, 0); opacity: 1; }
+}
+@keyframes puzzleRightTop {
+    0% { transform: translate(150px, -150px); opacity: 0; }
+    100% { transform: translate(0, 0); opacity: 1; }
+}
+@keyframes puzzleLeftBottom {
+    0% { transform: translate(-150px, 150px); opacity: 0; }
+    100% { transform: translate(0, 0); opacity: 1; }
+}
+@keyframes puzzleRightBottom {
+    0% { transform: translate(150px, 150px); opacity: 0; }
+    100% { transform: translate(0, 0); opacity: 1; }
+}
+
+/* --- КАТЕГОРІЇ ЗНИЗУ В РЯДОК (ЗІ СВІТІННЯМ) --- */
+.intro-categories-row {
+    position: absolute;
+    bottom: 40px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    z-index: 10; /* Підняли шар, щоб точно було поверх усього */
+    opacity: 0;
+    /* Використовуємо НОВУ анімацію саме для цього рядка */
+    animation: fadeInRow 0.8s ease-out forwards;
+    animation-delay: 1.5s; 
+}
+
+/* Окрема плавна анімація для категорій (їдуть рівно знизу) */
+@keyframes fadeInRow {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+.glow-category {
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-shadow: 0 0 15px rgba(255, 71, 126, 0.7), 0 0 30px rgba(255, 71, 126, 0.3);
+}
+
+.glow-category:hover {
+    color: #FF477E;
+    text-shadow: 0 0 20px rgba(255, 71, 126, 1), 0 0 40px rgba(255, 71, 126, 0.8);
+    transform: translateY(-2px);
+}
+
+/* Адаптація для телефонів залишається */
+@media (max-width: 768px) {
+    .intro-categories-row {
+        bottom: 25px;
+        gap: 15px;
+        flex-wrap: wrap; 
+        padding: 0 15px;
+    }
+    .glow-category {
+        font-size: 11px;
+        letter-spacing: 1px;
+    }
+}
+
+/* Контейнер для кнопки (чітко по центру під текстом, що на фото) */
+.intro-content {
+    position: absolute;
+    top: 66%; /* Стає ідеально під логотипом вашого фото */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+    opacity: 0;
+    animation: fadeInButton 0.8s ease-out forwards;
+    animation-delay: 1.5s;
+}
+
+@keyframes fadeInButton {
+    0% { opacity: 0; transform: translate(-50%, -30%); }
+    100% { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+.intro-btn {
+    background: #FFFFFF;
+    color: #000000;
+    padding: 16px 45px;
+    border-radius: 40px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    display: inline-block;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    text-decoration: none;
+}
+.intro-btn:hover {
+    background: var(--primary);
+    color: #FFFFFF;
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px rgba(255, 71, 126, 0.45);
+}
+
+/* Анти-лаг оптимізація для телефонів (проявлення без зсувів процесора) */
+@media (max-width: 768px) {
+    .puzzle-piece.item-1, .puzzle-piece.item-2, .puzzle-piece.item-3, .puzzle-piece.item-4 {
+        animation: fadeInMobile 0.8s ease-out forwards !important;
+    }
+    .puzzle-piece.item-1 { animation-delay: 0.1s !important; }
+    .puzzle-piece.item-2 { animation-delay: 0.25s !important; }
+    .puzzle-piece.item-3 { animation-delay: 0.18s !important; }
+    .puzzle-piece.item-4 { animation-delay: 0.32s !important; }
+
+    @keyframes fadeInMobile {
+        0% { opacity: 0; }
+        100% { opacity: 1; }
+    }
+    .puzzle-category {
+        font-size: 13px;
+        padding: 8px 18px;
+        letter-spacing: 2px;
+    }
+    .intro-content {
+        top: 70%; /* Зсув кнопки під мобільні екрани */
+    }
 }

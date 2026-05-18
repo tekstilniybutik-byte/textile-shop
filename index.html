@@ -9,7 +9,27 @@
 </head>
 <body>
 
-   <header class="navbar">
+ <section id="intro-gate" class="intro-puzzle-gate">
+        <div class="puzzle-grid">
+            <div class="puzzle-piece item-1"></div>
+            <div class="puzzle-piece item-2"></div>
+            <div class="puzzle-piece item-3"></div>
+            <div class="puzzle-piece item-4"></div>
+        </div>
+        
+        <div class="intro-content">
+            <a href="javascript:void(0);" id="enter-site-btn" class="intro-btn">Дивитися колекцію ✨</a>
+        </div>
+
+        <div class="intro-categories-row">
+            <span class="glow-category">Постільна білизна</span>
+            <span class="glow-category">Пледи</span>
+            <span class="glow-category">Рушники</span>
+            <span class="glow-category">Покривала</span>
+        </div>
+    </section>
+
+    <header class="navbar">
         <div class="container nav-container">
             <button id="burger-btn" class="burger-btn">
                 <span style="font-size: 24px;">☰</span> Меню
@@ -33,6 +53,7 @@
             <li><a href="#" data-category="kids" class="cat-link">Дитяча колекція 🧸</a></li>
             <li><a href="#" data-category="rushnyky" class="cat-link">Рушники</a></li>
             <li><a href="#" data-category="pledy" class="cat-link">Пледи</a></li>
+            <li><a href="#" data-category="pokryvala" class="cat-link">Покривала</a></li>
         </ul>
         
         <h3 style="font-size: 20px; margin: 30px 0 15px;">Інформація</h3>
@@ -42,10 +63,11 @@
         </ul>
     </div>
 
-    <section class="hero">
-        <div class="hero-overlay"></div> <div class="container hero-content">
-            <h1>Естетика вашого відпочинку</h1>
-            <p>Розкішна постільна білизна, невагомі пледи та м'які рушники, що дарують ніжність щодня.</p>
+    <section id="main-banner" class="hero">
+        <div class="hero-overlay"></div> 
+        <div class="container hero-content">
+            <h1>Створіть затишок у своєму домі</h1>
+            <p>Преміальна постільна білизна, м'які рушники та стильний декор для вашого ідеального відпочинку.</p>
             <a href="#catalog" class="cta-button">Дивитись каталог</a>
         </div>
     </section>
@@ -63,19 +85,19 @@
             <div class="video-track" id="video-track">
                 
                 <div class="video-slide">
-                    <video controls preload="metadata" playsinline>
+                    <video autoplay loop muted playsinline>
                         <source src="IMG_5940.mp4" type="video/mp4">
                     </video>
                 </div>
 
                 <div class="video-slide">
-                    <video controls preload="metadata" playsinline>
+                    <video autoplay loop muted playsinline>
                         <source src="IMG_5931.mp4" type="video/mp4">
                     </video>
                 </div>
 
                 <div class="video-slide">
-                    <video controls preload="metadata" playsinline>
+                   <video autoplay loop muted playsinline>
                         <source src="IMG_5895.mp4" type="video/mp4">
                     </video>
                 </div>

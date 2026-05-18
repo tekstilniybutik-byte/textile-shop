@@ -8,7 +8,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // --- ГЛОБАЛЬНІ ЗМІННІ ---
 const productsGrid = document.getElementById('products-grid');
 let allProducts = []; 
-const categoriesDict = { 'postil': 'Постільна білизна', 'rushnyky': 'Рушники', 'pledy': 'Пледи', 'dekor': 'Декор', 'kids': 'Дитяча колекція 🧸' };
+const categoriesDict = { 'postil': 'Постільна білизна', 'rushnyky': 'Рушники', 'pledy': 'Пледи', 'dekor': 'Декор', 'kids': 'Дитяча колекція 🧸', 'pokryvala': 'Покривала' };
 
 let myCart = JSON.parse(localStorage.getItem('shop_cart')) || [];
 let currentProduct = null;
@@ -566,20 +566,18 @@ document.addEventListener('DOMContentLoaded', () => {
     closeBtn.addEventListener('click', closeLightbox);
     lightbox.addEventListener('click', closeLightbox); // Клік в будь-яке місце фону теж закриває
 });
-// --- ЛОГІКА ВІДЕО-КАРУСЕЛІ ---
+//// --- ЛОГІКА ВІДЕО-КАРУСЕЛІ (Зі звуком по кліку) ---
 document.addEventListener('DOMContentLoaded', () => {
     const videoTrack = document.getElementById('video-track');
     const btnPrev = document.getElementById('video-prev');
     const btnNext = document.getElementById('video-next');
 
     if (videoTrack && btnPrev && btnNext) {
-        // Функція для визначення, на скільки пікселів гортати
         const getScrollAmount = () => {
             const slide = videoTrack.querySelector('.video-slide');
-            return slide ? slide.offsetWidth + 20 : 300; // ширина картки + відступ
+            return slide ? slide.offsetWidth + 20 : 300; 
         };
 
-        // Кліки по кнопках
         btnPrev.addEventListener('click', () => {
             videoTrack.scrollBy({ left: -getScrollAmount(), behavior: 'smooth' });
         });
@@ -588,14 +586,59 @@ document.addEventListener('DOMContentLoaded', () => {
             videoTrack.scrollBy({ left: getScrollAmount(), behavior: 'smooth' });
         });
 
-        // БОНУС: Якщо клієнт вмикає одне відео, всі інші автоматично ставляться на паузу
+        // --- ЛОГІКА ЗВУКУ (TIKTOK СТИЛЬ) ---
         const allVideos = videoTrack.querySelectorAll('video');
+        
         allVideos.forEach(video => {
-            video.addEventListener('play', () => {
-                allVideos.forEach(v => {
-                    if (v !== video) v.pause();
-                });
+            // Коли клієнт тисне на відео
+            video.addEventListener('click', () => {
+                if (video.muted) {
+                    // Спочатку гарантовано вимикаємо звук на ВСІХ інших відео в каруселі
+                    allVideos.forEach(v => v.muted = true);
+                    // Вмикаємо звук тільки на тому, на яке натиснули
+                    video.muted = false;
+                } else {
+                    // Якщо звук вже грає — вимикаємо (ставимо на Mute)
+                    video.muted = true;
+                }
             });
+        });
+    }
+});
+// --- ЛОГІКА ЗАСТАВКИ (ЕКРАН-ЗАВІСА) ---
+// --- ЛОГІКА ЗАСТАВКИ (ЕКРАН-ЗАВІСА З ПАМ'ЯТТЮ) ---
+document.addEventListener('DOMContentLoaded', () => {
+    const introGate = document.getElementById('intro-gate');
+    const enterBtn = document.getElementById('enter-site-btn');
+
+    if (introGate && enterBtn) {
+        
+        // ПЕРЕВІРКА: Чи користувач вже бачив заставку?
+        // Якщо він вже натискав кнопку, ми просто миттєво видаляємо заставку і показуємо сайт
+        if (sessionStorage.getItem('introSeen') === 'true') {
+            introGate.remove();
+            document.body.style.overflow = '';
+            return; // Зупиняємо подальше виконання коду
+        }
+
+        // Якщо користувач тут вперше за сесію - показуємо заставку
+        document.body.style.overflow = 'hidden';
+        window.scrollTo(0, 0); 
+
+        enterBtn.addEventListener('click', (e) => {
+            e.preventDefault(); 
+            
+            // ЗАПАМ'ЯТОВУЄМО, що клієнт вже пройшов заставку
+            sessionStorage.setItem('introSeen', 'true');
+            
+            // Запускаємо анімацію підняття завіси
+            introGate.classList.add('hidden-gate');
+            document.body.style.overflow = ''; 
+            
+            // Повністю прибираємо заставку з пам'яті телефону через 1.2с
+            setTimeout(() => {
+                introGate.remove();
+            }, 1200);
         });
     }
 });
