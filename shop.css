@@ -1909,3 +1909,151 @@ footer {
         top: 70%; /* Зсув кнопки під мобільні екрани */
     }
 }
+/* --- ПРЕМІУМ ЗАГОЛОВОК КАТАЛОГУ --- */
+.catalog-title-wrapper {
+    text-align: center;
+    margin: 40px 0 30px 0;
+}
+
+.pulse-title {
+    display: inline-block;
+    padding: 12px 35px;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-dark);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    background: rgba(255, 240, 243, 0.7); /* Ніжний рожевий фон */
+    border: 2px solid rgba(255, 71, 126, 0.4); /* Рожева рамка */
+    border-radius: 40px;
+    /* Ефект плавного дихання (пульсації) */
+    animation: titlePulse 3s infinite ease-in-out;
+}
+
+@keyframes titlePulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 71, 126, 0.2); transform: scale(1); border-color: rgba(255, 71, 126, 0.4); }
+    50% { box-shadow: 0 0 20px 0 rgba(255, 71, 126, 0.5); transform: scale(1.02); border-color: rgba(255, 71, 126, 0.8); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 71, 126, 0.2); transform: scale(1); border-color: rgba(255, 71, 126, 0.4); }
+}
+
+@media (max-width: 768px) {
+    .pulse-title {
+        font-size: 20px;
+        padding: 10px 25px;
+    }
+}
+
+/* --- ЕФЕКТ ЗБІЛЬШЕННЯ ВІДЕО ПРИ ВІДТВОРЕННІ --- */
+/* Цей клас ми будемо додавати через JavaScript, коли відео грає зі звуком */
+.video-slide.is-playing {
+    transform: scale(1.05); /* Збільшуємо відео */
+    z-index: 10; /* Піднімаємо його над іншими */
+    box-shadow: 0 25px 50px rgba(255, 71, 126, 0.3) !important;
+    border-color: var(--primary) !important;
+}
+
+/* Робимо перехід масштабування дуже плавним */
+.video-slide {
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease, border-color 0.4s ease;
+}
+
+/* --- ПРЕМІУМ БЛОК КОНТАКТІВ (КОМПАКТНИЙ ТА НІЖНИЙ) --- */
+.modal-contact-box {
+    margin: 20px 0;
+    padding: 16px;
+    background: linear-gradient(135deg, #fff0f3 0%, #ffffff 100%);
+    border: 1px solid rgba(255, 71, 126, 0.15);
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(255, 71, 126, 0.05); /* Дуже м'яка тінь замість агресивного світіння */
+}
+
+.modal-contact-text {
+    font-size: 13px;
+    color: #636E72;
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.modal-contact-text strong {
+    color: #2D3436;
+}
+
+.modal-contact-links {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+/* Кнопки тепер однакового розміру і акуратні */
+.contact-link {
+    flex: 1;
+    max-width: 140px;
+    padding: 10px 0;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 13px;
+    text-decoration: none !important; /* Прибираємо будь-які підкреслення */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+    border: none; /* Прибрали жорсткі рамки */
+}
+
+.tg-link { background: #E1F5FE; color: #0288D1; }
+.tg-link:hover { background: #039BE5; color: white; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(3, 155, 229, 0.2); }
+
+.vb-link { background: #F3E5F5; color: #7B1FA2; }
+.vb-link:hover { background: #8E24AA; color: white; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(142, 36, 170, 0.2); }
+
+/* Виправляємо чорну рамку на тексті */
+.modal-contact-hint {
+    font-size: 12px;
+    color: #A0A0A0;
+    text-decoration: none !important; /* Жодних підкреслень від браузера */
+    border-bottom: 1px dashed #A0A0A0;
+    padding-bottom: 2px;
+    background: none;
+    outline: none;
+}
+.modal-contact-hint:hover {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+/* Ідеально для телефонів */
+@media (max-width: 480px) {
+    .modal-contact-box { padding: 12px; margin: 15px 0; }
+    .modal-contact-links { gap: 8px; }
+    .contact-link { font-size: 12px; padding: 8px 0; max-width: 120px; }
+    .modal-contact-text { font-size: 12px; margin-bottom: 10px; }
+}
+/* --- ПРЕМІАЛЬНЕ ВІДОБРАЖЕННЯ РОЗМІРУ В МОДАЛЦІ --- */
+#modal-size-value {
+    display: inline-block;
+    background: linear-gradient(135deg, #FF477E 0%, #FF6B8B 100%);
+    color: #ffffff;
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    margin-left: 5px;
+    /* М'яка тінь, яка плавно розширюється і зникає */
+    animation: pulseSizeBadge 2s infinite cubic-bezier(0.66, 0, 0, 1);
+}
+
+@keyframes pulseSizeBadge {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 71, 126, 0.6);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(255, 71, 126, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 71, 126, 0);
+    }
+}

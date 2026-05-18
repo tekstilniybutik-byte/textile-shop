@@ -26,6 +26,7 @@
             <span class="glow-category">Пледи</span>
             <span class="glow-category">Рушники</span>
             <span class="glow-category">Покривала</span>
+            <span class="glow-category">Ковдри</span> </div>
         </div>
     </section>
 
@@ -54,6 +55,7 @@
             <li><a href="#" data-category="rushnyky" class="cat-link">Рушники</a></li>
             <li><a href="#" data-category="pledy" class="cat-link">Пледи</a></li>
             <li><a href="#" data-category="pokryvala" class="cat-link">Покривала</a></li>
+            <li><a href="#" data-category="kovdry" class="cat-link">Ковдри</a></li> </ul>
         </ul>
         
         <h3 style="font-size: 20px; margin: 30px 0 15px;">Інформація</h3>
@@ -71,7 +73,7 @@
             <a href="#catalog" class="cta-button">Дивитись каталог</a>
         </div>
     </section>
-   <section class="video-section container">
+   <section id="video-section" class="video-section container">
         <div class="section-header">
             <h2>Зазирніть до нас ✨</h2>
             <p style="text-align:center; color: var(--text-gray); margin-top: -25px; margin-bottom: 30px; font-weight: 500;">
@@ -97,8 +99,20 @@
                 </div>
 
                 <div class="video-slide">
+                    <video autoplay loop muted playsinline>
+                        <source src="IMG_5892.mp4" type="video/mp4">
+                    </video>
+                </div>
+
+                <div class="video-slide">
                    <video autoplay loop muted playsinline>
                         <source src="IMG_5895.mp4" type="video/mp4">
+                    </video>
+                </div>
+
+                <div class="video-slide">
+                    <video autoplay loop muted playsinline>
+                        <source src="IMG_5062.mp4" type="video/mp4">
                     </video>
                 </div>
                 
@@ -108,10 +122,10 @@
         </div>
     </section>
 
-       <section id="catalog" class="container catalog-section">
-        <div class="section-header">
-            <h2>Наші товари</h2>
-        </div>
+      <section id="catalog" class="container">
+    <div class="catalog-title-wrapper">
+        <h2 id="catalog-title" class="section-title pulse-title">Усі товари</h2>
+    </div>
 
         <div class="search-container">
             <div class="search-wrapper">
@@ -189,18 +203,18 @@
                     </div>
                 </div>
 
-                <div class="contact-card">
-                    <h3>Написати менеджеру</h3>
-                    <p>Оформлення замовлень та питання</p>
-                    <div class="social-icons-row">
-                        <a href="https://t.me/AllaVerba1" class="social-btn telegram" target="_blank" title="Менеджер Telegram">
-                            <i class="fab fa-telegram-plane"></i>
-                        </a>
-                        <a href="viber://chat?number=+380984165936" class="social-btn viber" target="_blank" title="Менеджер Viber">
-                            <i class="fab fa-viber"></i>
-                        </a>
-                    </div>
-                </div>
+                <div id="footer-contacts" class="contact-card">
+    <h3>Написати менеджеру</h3>
+    <p>Оформлення замовлень та питання</p>
+    <div class="social-icons-row">
+        <a href="https://t.me/AllaVerba1" class="social-btn telegram" target="_blank" title="Менеджер Telegram">
+            <i class="fab fa-telegram-plane"></i>
+        </a>
+        <a href="viber://chat?number=+380984165936" class="social-btn viber" target="_blank" title="Менеджер Viber">
+            <i class="fab fa-viber"></i>
+        </a>
+    </div>
+</div>
 
             </div>
 
@@ -228,10 +242,15 @@
             <div class="modal-info">
                 <h2 id="modal-title">Назва товару</h2>
                 <p id="modal-art" style="color: #8e8e93; font-size: 14px; margin-bottom: 10px;">Арт: —</p>
-                
-                <div class="modal-price-container">
-                    <span id="modal-price" class="current-price">0 ₴</span>
-                </div>
+
+            <div id="modal-size-display" style="font-size: 14px; color: #636E72; margin-bottom: 15px;">
+                <strong>Розмір:</strong> <span id="modal-size-value"></span>
+            </div>
+
+            <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 20px;">
+            <div style="font-size: 24px; font-weight: 800; color: #2D3436;" id="modal-price"></div>
+                <span id="modal-bulk-hint" style="font-size: 13px; color: #27ae60; font-weight: 600; padding: 4px 8px; background: #e8f8f5; border-radius: 8px; display: none;"></span>
+            </div>
 
                 <div id="modal-desc" class="modal-description">Опис товару...</div>
 
@@ -254,7 +273,27 @@
                     <span>Разом:</span>
                     <span id="modal-total-price">0 ₴</span>
                 </div>
-
+                
+                <div class="modal-contact-box">
+            <p class="modal-contact-text">
+                Маєте питання щодо комплектації чи розміру?<br>
+                <strong>Всі деталі з радістю підкаже наш менеджер:</strong>
+            </p>
+            
+            <div class="modal-contact-links">
+                <a href="https://t.me/AllaVerba1" target="_blank" class="contact-link tg-link">
+                    💬 Telegram
+                </a>
+                
+                <a href="viber://chat?number=+380984165936" target="_blank" class="contact-link vb-link">
+                    📞 Viber
+                </a>
+            </div>
+            
+            <a href="#footer-contacts" class="modal-contact-hint" onclick="closeModal()">
+                Або перегляньте всі контакти внизу сторінки 👇
+            </a>
+            </div>
                 <button id="add-to-cart-btn" class="buy-btn-big">
                     Додати в кошик 🛍️
                 </button>

@@ -8,7 +8,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // --- ГЛОБАЛЬНІ ЗМІННІ ---
 const productsGrid = document.getElementById('products-grid');
 let allProducts = []; 
-const categoriesDict = { 'postil': 'Постільна білизна', 'rushnyky': 'Рушники', 'pledy': 'Пледи', 'dekor': 'Декор', 'kids': 'Дитяча колекція 🧸', 'pokryvala': 'Покривала' };
+const categoriesDict = { 'postil': 'Постільна білизна', 'rushnyky': 'Рушники', 'pledy': 'Пледи', 'dekor': 'Декор', 'kids': 'Дитяча колекція 🧸', 'pokryvala': 'Покривала', 'kovdry': 'Ковдри' };
 
 let myCart = JSON.parse(localStorage.getItem('shop_cart')) || [];
 let currentProduct = null;
@@ -360,26 +360,51 @@ function updateModalDisplayPrice() {
     const priceElement = document.getElementById('modal-price');
     const totalElement = document.getElementById('modal-total-price');
     
-    let finalPrice = currentVariation.price;
-    let isWholesale = false;
+    // Елемент для виводу розміру (якщо ви додали його в HTML)
+    const sizeElement = document.getElementById('modal-size-value'); 
 
-    if (currentQty >= 2 && currentVariation.bulk_price) {
-        finalPrice = currentVariation.bulk_price;
-        isWholesale = true;
-    } else if (currentVariation.sale_price) {
-        finalPrice = currentVariation.sale_price;
-    }
+    // 1. Визначаємо базову ціну за 1 шт (враховуємо, чи є акція)
+    let basePrice = currentVariation.sale_price ? currentVariation.sale_price : currentVariation.price;
+    let bulkPrice = currentVariation.bulk_price; // Ціна від 2 шт
+    let finalPrice = basePrice;
 
-    if (isWholesale) {
-        priceElement.innerHTML = `<span style="color: #FF477E; font-size: 14px; border: 1px solid #FF477E; padding: 2px 6px; border-radius: 6px; margin-right: 8px; vertical-align: middle;">Опт</span>${finalPrice} ₴`;
-    } else if (currentVariation.sale_price && currentQty < 2) {
-        priceElement.innerHTML = `<span style="text-decoration: line-through; color: #8e8e93; font-size: 16px; margin-right: 8px;">${currentVariation.price} ₴</span>${finalPrice} ₴`;
-    } else {
+    // 2. Логіка відображення ціни
+    if (currentQty >= 2 && bulkPrice) {
+        // ЯКЩО КУПУЮТЬ 2 АБО БІЛЬШЕ:
+        finalPrice = bulkPrice;
+        
+        // Показуємо просто гуртову ціну (без плашок "від 2-х", бо умова вже виконана)
         priceElement.innerHTML = `${finalPrice} ₴`;
+        
+    } else {
+        // ЯКЩО КУПУЮТЬ 1 ШТ:
+        finalPrice = basePrice;
+        let priceHTML = '';
+        
+        // Якщо є акція, спочатку малюємо перекреслену стару ціну
+        if (currentVariation.sale_price) {
+            priceHTML += `<span style="text-decoration: line-through; color: #8e8e93; font-size: 16px; margin-right: 8px;">${currentVariation.price} ₴</span>`;
+        }
+        
+        // Малюємо поточну ціну за 1 шт
+        priceHTML += `${finalPrice} ₴`;
+
+        // ДОДАЄМО КРАСИВУ ЗЕЛЕНУ ПІДКАЗКУ "від 2-х од." (якщо вона є в адмінці)
+        if (bulkPrice) {
+            priceHTML += `<span style="font-size: 13px; color: #27ae60; font-weight: 600; padding: 4px 8px; background: #e8f8f5; border-radius: 8px; margin-left: 12px; vertical-align: middle;">від 2-х од. ${bulkPrice} ₴</span>`;
+        }
+        
+        priceElement.innerHTML = priceHTML;
     }
 
+    // 3. Оновлюємо суму "Разом"
     if (totalElement) {
         totalElement.innerText = `${finalPrice * currentQty} ₴`;
+    }
+
+    // 4. ВИВІД РОЗМІРУ (беремо з поля "Назва варіації" з адмінки)
+    if (sizeElement) {
+        sizeElement.textContent = currentVariation.name || 'Стандартний';
     }
 }
 
@@ -587,19 +612,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // --- ЛОГІКА ЗВУКУ (TIKTOK СТИЛЬ) ---
+        // --- ЛОГІКА ЗВУКУ ТА ЗБІЛЬШЕННЯ ВІДЕО (TIKTOK СТИЛЬ) ---
         const allVideos = videoTrack.querySelectorAll('video');
         
         allVideos.forEach(video => {
-            // Коли клієнт тисне на відео
+            const slideContainer = video.closest('.video-slide'); // Знаходимо рамку відео
+
             video.addEventListener('click', () => {
                 if (video.muted) {
-                    // Спочатку гарантовано вимикаємо звук на ВСІХ інших відео в каруселі
-                    allVideos.forEach(v => v.muted = true);
-                    // Вмикаємо звук тільки на тому, на яке натиснули
+                    // Спочатку вимикаємо звук і повертаємо розмір всім ІНШИМ відео
+                    allVideos.forEach(v => {
+                        v.muted = true;
+                        if(v.closest('.video-slide')) {
+                            v.closest('.video-slide').classList.remove('is-playing');
+                        }
+                    });
+                    
+                    // Вмикаємо звук на поточному відео і збільшуємо його рамку
                     video.muted = false;
+                    if(slideContainer) slideContainer.classList.add('is-playing');
+                    
                 } else {
-                    // Якщо звук вже грає — вимикаємо (ставимо на Mute)
+                    // Якщо звук вже грає — вимикаємо і повертаємо стандартний розмір
                     video.muted = true;
+                    if(slideContainer) slideContainer.classList.remove('is-playing');
                 }
             });
         });
@@ -641,4 +677,38 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 1200);
         });
     }
+});
+// --- ДИНАМІЧНИЙ ЗАГОЛОВОК ТА ХОВАННЯ ВІДЕО ПРИ ФІЛЬТРАЦІЇ ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Знаходимо всі посилання категорій у меню
+    const catLinks = document.querySelectorAll('.cat-link');
+    const catalogTitle = document.getElementById('catalog-title');
+    const videoSection = document.getElementById('video-section');
+
+    catLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            const category = link.getAttribute('data-category');
+            
+            // 1. ЗМІНЮЄМО ЗАГОЛОВОК
+            if (catalogTitle) {
+                if (category === 'all') {
+                    catalogTitle.textContent = 'Усі товари';
+                } else {
+                    // Беремо красиву назву прямо з кнопки меню (очищаємо від зайвих пробілів та емодзі ведмедика)
+                    catalogTitle.textContent = link.textContent.replace('🧸', '').trim();
+                }
+            }
+
+            // 2. ХОВАЄМО АБО ПОКАЗУЄМО ВІДЕО
+            if (videoSection) {
+                if (category === 'all') {
+                    // Якщо вибрали "Усі товари" - повертаємо відео
+                    videoSection.style.display = 'block'; 
+                } else {
+                    // Якщо вибрали конкретну категорію - повністю ховаємо відео для швидкодії
+                    videoSection.style.display = 'none'; 
+                }
+            }
+        });
+    });
 });
