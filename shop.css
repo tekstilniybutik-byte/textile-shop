@@ -1813,38 +1813,74 @@ footer {
 /* --- АДАПТАЦІЯ ДЛЯ ТЕЛЕФОНІВ (З ВЕРТИКАЛЬНИМ ФОТО ТА ПІДСВІТКОЮ) --- */
 @media (max-width: 768px) {
     
-    /* 1. Підміняємо картинку спеціально для вузьких екранів */
+    /* Підміняємо картинку спеціально для вузьких екранів */
     .puzzle-piece {
         background-image: url('dis.png'); 
     }
 
-    /* 2. Позиціонуємо кнопку, щоб вона не перекривала напис на фото */
+    /* Вирівнюємо контент по центру (напис + кнопка один під одним) */
     .intro-content {
-        top: 60%; /* Ставимо кнопку між написом і нижнім пазлом */
+        position: absolute;
+        top: 62%; /* Ідеальна висота на екрані телефону */
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        z-index: 3;
+    }
+
+    /* СТИЛЬ НАПИСУ "ТИЦЯЙ" */
+    .intro-btn-hint {
+        color: #FF477E; /* Наш фірмовий рожевий колір */
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 3px; /* Гарні розтягнуті літери */
+        margin-bottom: 8px; /* Відступ до самої кнопки */
+        /* Подвійна тінь, щоб текст ідеально читався на будь-якій картинці */
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8), 0 0 10px rgba(255, 71, 126, 0.5);
+        /* Легка анімація погойдування вгору-вниз через відеокарту (без лагів!) */
+        animation: hintBounce 2s infinite ease-in-out;
+    }
+
+    @keyframes hintBounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-4px); } /* Легенько підстрибує вгору */
+    }
+
+    /* РОЗКІШНА РОЖЕВА КНОПКА ДЛЯ ТЕЛЕФОНУ */
+    .intro-btn {
+        background: linear-gradient(135deg, #FF477E 0%, #FF6B8B 100%) !important; /* Соковитий преміальний градієнт */
+        color: #FFFFFF !important; /* Білий чіткий текст */
+        padding: 14px 35px;
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        border-radius: 40px;
+        border: none !important;
+        /* М'яке об'ємне рожеве світіння */
+        box-shadow: 0 8px 25px rgba(255, 71, 126, 0.5) !important;
+        text-decoration: none;
+        transition: transform 0.2s ease;
     }
     
-    /* Додаємо кнопці яскраве світіння, щоб вона "кричала" про натискання */
-    .intro-btn {
-        padding: 15px 35px;
-        font-size: 15px;
-        box-shadow: 0 8px 30px rgba(255, 71, 126, 0.6); /* Насичена рожева тінь */
-        border: 1px solid rgba(255, 255, 255, 0.9);
+    .intro-btn:active {
+        transform: scale(0.96); /* Кнопка приємно проминається під пальцем при натисканні */
     }
 
-    /* 3. Робимо категорії знизу 100% читабельними */
+    /* Налаштування для категорій знизу залишаються як були */
     .intro-categories-row {
-        bottom: 0; /* Притискаємо в самий низ */
-        padding: 40px 10px 25px 10px; /* Даємо місце для градієнта */
+        bottom: 0;
+        padding: 40px 10px 25px 10px;
         gap: 12px;
-        /* Легке затемнення знизу екрану (захищає білий текст від світлих ділянок на фото) */
         background: linear-gradient(to top, rgba(10, 10, 10, 0.85) 0%, rgba(10, 10, 10, 0) 100%);
     }
-
     .glow-category {
         font-size: 11px;
         letter-spacing: 1px;
         font-weight: 700;
-        /* Подвійна магія: жорстка чорна тінь для чіткості + м'яка рожева для краси */
         text-shadow: 1px 1px 3px rgba(0,0,0,0.9), 0 0 15px rgba(255, 71, 126, 1);
     }
 }
@@ -2055,5 +2091,125 @@ footer {
     }
     100% {
         box-shadow: 0 0 0 0 rgba(255, 71, 126, 0);
+    }
+}
+/* =======================================================
+   🚀 АНТИ-ЛАГ ОПТИМІЗАЦІЯ ДЛЯ ТЕЛЕФОНІВ (МАКСИМАЛЬНА ПЛАВНІСТЬ)
+   ======================================================= */
+@media (max-width: 768px) {
+    
+    /* 1. Вимикаємо "важкі" пульсації тіней і рамок */
+    .modal-contact-box, 
+    .pulse-title {
+        animation: none !important; /* Вимикаємо важку анімацію */
+        box-shadow: 0 4px 15px rgba(255, 71, 126, 0.08) !important; /* Статична легка тінь */
+        border-color: rgba(255, 71, 126, 0.2) !important;
+    }
+
+    /* 2. Замінюємо світіння розміру на легке дихання (через відеокарту) */
+    #modal-size-value {
+        animation: lightPulse 2s infinite ease-in-out !important;
+        box-shadow: none !important;
+    }
+    
+    @keyframes lightPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.06); } /* Ледь помітно збільшується, замість світіння */
+        100% { transform: scale(1); }
+    }
+
+    /* 3. Примусово вмикаємо GPU-прискорення для заставки-пазлу */
+    .puzzle-piece {
+        will-change: transform, opacity;
+        -webkit-transform: translateZ(0); /* Магія, яка перекидає рендер на відеокарту */
+        transform: translateZ(0);
+        backface-visibility: hidden;
+    }
+
+    /* 4. Вимикаємо ефект "підстрибування" при наведенні (на телефоні нема мишки, це зайве) */
+    .contact-link:hover, .glow-category:hover, .intro-btn:hover {
+        transform: none !important;
+    }
+}
+/* --- ПРЕМІУМ ПОВІДОМЛЕННЯ В КОШИКУ --- */
+.cart-notice {
+    display: flex;
+    align-items: flex-start; /* Вирівнювання по верхньому краю */
+    gap: 15px;
+    padding: 16px 20px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeInNotice 0.4s ease-out forwards;
+}
+
+@keyframes fadeInNotice {
+    0% { opacity: 0; transform: translateY(5px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Красива кругла підкладка під іконку (лампочку/галочку) */
+.notice-icon {
+    font-size: 20px;
+    background: #ffffff;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+    flex-shrink: 0; /* Щоб кружечок не сплющувався на телефоні */
+}
+
+/* Дрібний текст-підказка знизу */
+.notice-hint {
+    display: block;
+    font-size: 12px;
+    color: #8e8e93;
+    margin-top: 6px;
+    font-style: italic; /* Легкий нахил для естетики */
+}
+
+/* --- РОЖЕВИЙ БЛОК (Нова Пошта) --- */
+.warning-notice {
+    background: linear-gradient(135deg, #FFF0F3 0%, #ffffff 100%);
+    color: #2D3436;
+    border: 1px solid rgba(255, 71, 126, 0.15);
+    /* Головна фішка: товста рожева лінія зліва */
+    border-left: 5px solid #FF477E; 
+    box-shadow: 0 8px 20px rgba(255, 71, 126, 0.08);
+}
+.warning-notice strong {
+    color: #FF477E; /* Виділяємо головні слова рожевим */
+}
+
+/* --- ЗЕЛЕНИЙ БЛОК (Укрпошта) --- */
+.success-notice {
+    background: linear-gradient(135deg, #e8f8f5 0%, #ffffff 100%);
+    color: #2D3436;
+    border: 1px solid rgba(39, 174, 96, 0.15);
+    /* Головна фішка: товста зелена лінія зліва */
+    border-left: 5px solid #27ae60; 
+    box-shadow: 0 8px 20px rgba(39, 174, 96, 0.08);
+}
+.success-notice strong {
+    color: #27ae60; /* Виділяємо головні слова зеленим */
+}
+
+/* Адаптація для вузьких телефонів */
+@media (max-width: 480px) {
+    .cart-notice {
+        padding: 14px 16px;
+        gap: 12px;
+        font-size: 13px;
+    }
+    .notice-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
     }
 }

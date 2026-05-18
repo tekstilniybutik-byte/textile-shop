@@ -712,3 +712,75 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+// --- 🚀 РОЗУМНІ ВІДЕО (ОПТИМІЗАЦІЯ ПАМ'ЯТІ ТЕЛЕФОНУ) ---
+document.addEventListener('DOMContentLoaded', () => {
+    const videos = document.querySelectorAll('.video-slide video');
+    
+    // Перевіряємо, чи підтримує браузер цю функцію (всі сучасні підтримують)
+    if ('IntersectionObserver' in window) {
+        const videoObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Відео з'явилося на екрані (хоча б на 30%) - запускаємо
+                    entry.target.play().catch(err => console.log('Автоплей заблоковано', err));
+                } else {
+                    // Відео пішло з екрану - ставимо на паузу, щоб не лагав сайт
+                    entry.target.pause();
+                }
+            });
+        }, { threshold: 0.3 }); // 0.3 означає, що видно 30% відео
+
+        videos.forEach(video => {
+            // Зупиняємо відео при старті (вони самі запустяться, коли до них доскролять)
+            video.pause(); 
+            videoObserver.observe(video);
+        });
+    }
+});
+// --- 🚚 ЛОГІКА ДИНАМІЧНИХ ПІДКАЗОК ДОСТАВКИ В КОШИКУ (ДЛЯ РАДІОКНОПОК) ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Знаходимо всі кружечки (радіокнопки) вибору доставки
+    const deliveryRadios = document.querySelectorAll('input[name="delivery-service"]'); 
+    
+    // Знаходимо наші красиві блоки підказок
+    const prepayNotice = document.getElementById('prepayment-notice');
+    const ukrposhtaNotice = document.getElementById('ukrposhta-notice');
+    
+    // Знаходимо блок вибору Відділення/Поштомат (тільки для НП)
+    const npTypeBlock = document.getElementById('np-type-block');
+
+    if (deliveryRadios.length > 0 && prepayNotice && ukrposhtaNotice) {
+        
+        // Функція, яка перемикає блоки
+        const updateDeliveryNotice = () => {
+            // Знаходимо, яка саме кнопка зараз вибрана
+            const selectedMethod = document.querySelector('input[name="delivery-service"]:checked').value;
+            
+            if (selectedMethod === 'Укрпошта') {
+                // Показуємо зелений блок Укрпошти
+                prepayNotice.style.display = 'none';
+                ukrposhtaNotice.style.display = 'flex';
+                
+                // Ховаємо вибір "Поштомат", залишаємо просто поле для вводу номера відділення
+                if (npTypeBlock) npTypeBlock.style.display = 'none'; 
+                
+            } else {
+                // Показуємо рожевий блок Нової Пошти
+                ukrposhtaNotice.style.display = 'none';
+                prepayNotice.style.display = 'flex';
+                
+                // Повертаємо вибір Відділення/Поштомат
+                if (npTypeBlock) npTypeBlock.style.display = 'flex'; 
+            }
+        };
+
+        // Слухаємо кожне натискання на радіокнопки
+        deliveryRadios.forEach(radio => {
+            radio.addEventListener('change', updateDeliveryNotice);
+        });
+        
+        // Запускаємо один раз при відкритті кошика, щоб налаштувати правильний вигляд
+        updateDeliveryNotice(); 
+    }
+});

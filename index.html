@@ -18,6 +18,8 @@
         </div>
         
         <div class="intro-content">
+            <span class="intro-btn-hint">Тицяй 👇</span>
+            
             <a href="javascript:void(0);" id="enter-site-btn" class="intro-btn">Дивитися колекцію ✨</a>
         </div>
 
@@ -340,9 +342,21 @@
                 </label>
             </div>
 
-            <div id="ukrposhta-hint" class="mono-hint">
-                ✅ <strong>Без передплати!</strong> Оплата при отриманні.
+           <div id="prepayment-notice" class="cart-notice warning-notice">
+            <span class="notice-icon">💡</span>
+            <div>
+                Відправка здійснюється за <strong>мінімальною передплатою</strong> (реквізити вказані нижче).
+                <span class="notice-hint">*Точну суму передплати уточнюйте у менеджера. Для Укрпошти передплата не потрібна.</span>
             </div>
+        </div>
+
+        <div id="ukrposhta-notice" class="cart-notice success-notice" style="display: none;">
+            <span class="notice-icon">✅</span>
+            <div>
+                <strong>Укрпошта:</strong> Відправка без передплати!
+                <span class="notice-hint">Повну суму оплачуєте при отриманні на відділенні.</span>
+            </div>
+        </div>
 
             <div id="np-type-block" class="delivery-selector">
                 <label class="delivery-option">
