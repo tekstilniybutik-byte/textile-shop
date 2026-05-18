@@ -49,6 +49,42 @@
             <a href="#catalog" class="cta-button">Дивитись каталог</a>
         </div>
     </section>
+   <section class="video-section container">
+        <div class="section-header">
+            <h2>Зазирніть до нас ✨</h2>
+            <p style="text-align:center; color: var(--text-gray); margin-top: -25px; margin-bottom: 30px; font-weight: 500;">
+                Атмосфера затишку та краси у відео-оглядах
+            </p>
+        </div>
+        
+        <div class="video-carousel-wrapper">
+            <button class="carousel-btn prev-btn" id="video-prev">❮</button>
+
+            <div class="video-track" id="video-track">
+                
+                <div class="video-slide">
+                    <video controls preload="metadata" playsinline>
+                        <source src="IMG_5940.mp4" type="video/mp4">
+                    </video>
+                </div>
+
+                <div class="video-slide">
+                    <video controls preload="metadata" playsinline>
+                        <source src="IMG_5931.mp4" type="video/mp4">
+                    </video>
+                </div>
+
+                <div class="video-slide">
+                    <video controls preload="metadata" playsinline>
+                        <source src="IMG_5895.mp4" type="video/mp4">
+                    </video>
+                </div>
+                
+                </div>
+
+            <button class="carousel-btn next-btn" id="video-next">❯</button>
+        </div>
+    </section>
 
        <section id="catalog" class="container catalog-section">
         <div class="section-header">
@@ -66,6 +102,9 @@
         <div id="products-grid" class="products-grid">
             <p style="text-align: center; grid-column: 1 / -1; color: #636E72;">Завантаження товарів...</p>
         </div>
+
+        <div id="pagination-container" class="pagination"></div>
+
     </section>
 <section class="reviews-section container">
         <div class="section-header">

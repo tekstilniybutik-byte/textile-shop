@@ -17,6 +17,8 @@ let currentQty = 1;
 
 // ОСЬ ЦЕЙ РЯДОК БУВ ПРОПУЩЕНИЙ:
 let currentCategory = 'all'; 
+let currentPage = 1; // Поточна сторінка
+const itemsPerPage = 6; // Скільки товарів показувати (можете змінити на 8 чи 10) 
 
 // --- ІНІЦІАЛІЗАЦІЯ ПРИ ЗАВАНТАЖЕННІ ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -168,28 +170,25 @@ async function loadProducts() {
     checkUrlParams(); // Перевіряємо посилання тільки після того, як товари завантажені
 }
 
-function renderProducts(categoryFilter) {
+function renderProducts(categoryFilter, page = 1) {
     if (!productsGrid) return;
-    currentCategory = categoryFilter; // Запам'ятовуємо, яку категорію обрав користувач
+    currentCategory = categoryFilter; 
+    currentPage = page; // Оновлюємо поточну сторінку
     productsGrid.innerHTML = '';
     
-    // Отримуємо текст із пошуку
     const searchInput = document.getElementById('search-input');
     const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
     
-    // Показуємо або ховаємо хрестик очищення тексту
     const clearBtn = document.getElementById('clear-search');
     if (clearBtn) {
         clearBtn.style.display = searchQuery ? 'block' : 'none';
     }
 
-    // 1. ФІЛЬТРАЦІЯ ЗА КАТЕГОРІЄЮ
+    // ФІЛЬТРАЦІЯ
     let filteredData = allProducts;
     if (categoryFilter !== 'all') {
         filteredData = allProducts.filter(p => p.category === categoryFilter);
     }
-
-    // 2. ДОДАТКОВА ФІЛЬТРАЦІЯ ЗА ПОШУКОВИМ ЗАПИТОМ
     if (searchQuery) {
         filteredData = filteredData.filter(p => 
             p.title.toLowerCase().includes(searchQuery) || 
@@ -200,9 +199,18 @@ function renderProducts(categoryFilter) {
 
     if (filteredData.length === 0) {
         productsGrid.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color: #8e8e93; margin-top: 20px; font-weight: 500;">Нічого не знайдено за вашим запитом 🔍</p>';
+        renderPagination(0);
         return;
     }
-    filteredData.forEach(product => {
+
+    // --- ПАГІНАЦІЯ (Ріжемо масив) ---
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedData = filteredData.slice(startIndex, endIndex); // Беремо тільки 6 товарів
+
+    // ВИВІД КАРТОК НА ЕКРАН
+    paginatedData.forEach(product => {
         const card = document.createElement('div');
         card.className = 'product-card';
         
@@ -212,8 +220,6 @@ function renderProducts(categoryFilter) {
         }
 
         const catName = categoriesDict[product.category] || product.category;
-        
-        // НОВЕ: Перевіряємо чи вказаний матеріал, і створюємо для нього красивий блок
         const materialHTML = product.material ? `<div class="product-material">🧵 ${product.material}</div>` : '';
 
         card.innerHTML = `
@@ -230,7 +236,31 @@ function renderProducts(categoryFilter) {
         card.addEventListener('click', () => window.openProductModal(product.id));
         productsGrid.appendChild(card);
     });
+
+    // Малюємо кнопки сторінок
+    renderPagination(totalPages);
+}
+
+// НОВА ФУНКЦІЯ: Малює кнопки (1, 2, 3...)
+function renderPagination(totalPages) {
+    const pagContainer = document.getElementById('pagination-container');
+    if (!pagContainer) return;
+    pagContainer.innerHTML = '';
+
+    if (totalPages <= 1) return; // Якщо товарів мало, ховаємо кнопки
+
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+        btn.innerText = i;
+        btn.onclick = () => {
+            renderProducts(currentCategory, i);
+            // Плавний скрол вгору каталогу при перемиканні сторінки
+            document.getElementById('catalog').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+        pagContainer.appendChild(btn);
     }
+}
 
 // СЛУХАЧІ ПОДІЙ ДЛЯ РЯДКА ПОШУКУ
 document.addEventListener('DOMContentLoaded', () => {
@@ -239,17 +269,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (searchInput) {
         // Пошук спрацьовує миттєво під час введення кожної літери (без перезавантаження)
-        searchInput.addEventListener('input', () => {
-            renderProducts(currentCategory);
+       searchInput.addEventListener('input', () => {
+            renderProducts(currentCategory, 1);
         });
     }
 
     if (clearSearchBtn) {
         // Очищення рядка при натисканні на хрестик
-        clearSearchBtn.addEventListener('click', () => {
+       clearSearchBtn.addEventListener('click', () => {
             searchInput.value = '';
-            renderProducts(currentCategory);
-            searchInput.focus(); // Повертаємо фокус на поле введення
+            renderProducts(currentCategory, 1);
+            searchInput.focus(); 
         });
     }
 });
@@ -535,4 +565,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
     closeBtn.addEventListener('click', closeLightbox);
     lightbox.addEventListener('click', closeLightbox); // Клік в будь-яке місце фону теж закриває
+});
+// --- ЛОГІКА ВІДЕО-КАРУСЕЛІ ---
+document.addEventListener('DOMContentLoaded', () => {
+    const videoTrack = document.getElementById('video-track');
+    const btnPrev = document.getElementById('video-prev');
+    const btnNext = document.getElementById('video-next');
+
+    if (videoTrack && btnPrev && btnNext) {
+        // Функція для визначення, на скільки пікселів гортати
+        const getScrollAmount = () => {
+            const slide = videoTrack.querySelector('.video-slide');
+            return slide ? slide.offsetWidth + 20 : 300; // ширина картки + відступ
+        };
+
+        // Кліки по кнопках
+        btnPrev.addEventListener('click', () => {
+            videoTrack.scrollBy({ left: -getScrollAmount(), behavior: 'smooth' });
+        });
+
+        btnNext.addEventListener('click', () => {
+            videoTrack.scrollBy({ left: getScrollAmount(), behavior: 'smooth' });
+        });
+
+        // БОНУС: Якщо клієнт вмикає одне відео, всі інші автоматично ставляться на паузу
+        const allVideos = videoTrack.querySelectorAll('video');
+        allVideos.forEach(video => {
+            video.addEventListener('play', () => {
+                allVideos.forEach(v => {
+                    if (v !== video) v.pause();
+                });
+            });
+        });
+    }
 });

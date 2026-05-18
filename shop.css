@@ -683,38 +683,52 @@ footer {
 }
 
 /* --- ПРЕМІУМ ДИЗАЙН КОШИКА --- */
+/* --- ПРЕМІУМ ДИЗАЙН КОШИКА (GPU Апаратне прискорення) --- */
 .cart-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px); /* Гарне розмиття заднього фону */
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     z-index: 1999;
     opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
+    visibility: hidden; /* Блокує невидимий елемент, щоб не вантажив пам'ять */
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    will-change: opacity; /* Підказує телефону підготуватися до анімації */
 }
+
 .cart-overlay.show {
     opacity: 1;
-    pointer-events: auto;
+    visibility: visible;
 }
 
 .cart-panel {
     position: fixed;
-    top: 0; right: -100%; 
+    top: 0; right: 0; /* Притискаємо до краю назавжди */
     width: 420px;
     max-width: 100%;
-    height: 100vh;
-    background: var(--white); /* Використовуємо твій білий фон */
+    height: 100%; 
+    height: 100dvh; /* Динамічна висота екрану */
+    background: #F5F5F7 !important;
     z-index: 2000;
-    box-shadow: -10px 0 30px rgba(255, 71, 126, 0.15); /* Ніжна рожева тінь */
-    transition: right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: -10px 0 30px rgba(255, 71, 126, 0.15);
+    
+    /* МАГІЯ ШВИДКОСТІ: Використовуємо 3D зсув замість right */
+    transform: translateX(100%); 
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    will-change: transform; /* Змушує відеокарту тримати кошик у пам'яті */
+    
     display: flex;
     flex-direction: column;
     border-top-left-radius: 20px;
     border-bottom-left-radius: 20px;
+    overflow: hidden;
+    overscroll-behavior: contain;
 }
+
 .cart-panel.open {
-    right: 0;
+    /* Кошик виїжджає на екран за рахунок відеокарти (0 лагів) */
+    transform: translateX(0); 
 }
 
 /* Шапка кошика */
@@ -1353,4 +1367,143 @@ footer {
 .close-lightbox:hover {
     background: rgba(255, 71, 126, 0.3);
     color: #FF477E;
+}
+/* --- ПАГІНАЦІЯ (ПОДІЛ НА СТОРІНКИ) --- */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 40px;
+    width: 100%;
+}
+
+.page-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 71, 126, 0.2);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    color: var(--text-dark);
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page-btn:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+    transform: translateY(-3px);
+}
+
+.page-btn.active {
+    background: var(--primary);
+    color: var(--white);
+    border-color: var(--primary);
+    box-shadow: 0 6px 15px rgba(255, 71, 126, 0.3);
+    transform: scale(1.05);
+}
+/* --- ВІДЕО КАРУСЕЛЬ (Стиль TikTok) --- */
+.video-section {
+    margin-top: 60px;
+    margin-bottom: 40px;
+    padding: 0 15px;
+}
+
+.video-carousel-wrapper {
+    position: relative;
+    max-width: 1000px; /* Широкий контейнер для 3 відео */
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+}
+
+/* Доріжка скролу */
+.video-track {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory; /* Магнітний скрол */
+    scroll-behavior: smooth;
+    padding: 20px 10px; /* Відступи для тіней, щоб вони не обрізались */
+    /* Ховаємо негарний повзунок скролу в різних браузерах */
+    -ms-overflow-style: none;  
+    scrollbar-width: none;  
+}
+.video-track::-webkit-scrollbar {
+    display: none; 
+}
+
+/* Рамочка-скло для кожного відео */
+.video-slide {
+    flex: 0 0 calc(100% / 3 - 14px); /* На комп'ютері показуємо рівно 3 відео */
+    scroll-snap-align: center; /* Центрує відео при гортанні */
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 71, 126, 0.3);
+    border-radius: 28px;
+    padding: 10px;
+    box-shadow: 0 15px 35px rgba(255, 107, 139, 0.08);
+    transition: transform 0.3s ease;
+}
+
+.video-slide:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 45px rgba(255, 71, 126, 0.15);
+}
+
+/* Саме відео в пропорціях TikTok */
+.video-slide video {
+    width: 100%;
+    aspect-ratio: 9/16; /* Ідеальний вертикальний розмір телефону */
+    object-fit: cover;
+    border-radius: 18px;
+    display: block;
+    background-color: rgba(255, 240, 243, 0.5);
+}
+
+/* Кнопки навігації (Стрілочки) */
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(255, 71, 126, 0.2);
+    color: var(--primary);
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.carousel-btn:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-50%) scale(1.1);
+}
+.prev-btn { left: -20px; }
+.next-btn { right: -20px; }
+
+/* --- АДАПТАЦІЯ КАРОСЕЛІ ДЛЯ ТЕЛЕФОНІВ --- */
+@media (max-width: 900px) {
+    .video-slide { flex: 0 0 calc(100% / 2 - 10px); } /* 2 відео на планшеті */
+}
+@media (max-width: 600px) {
+    /* На телефоні показуємо 1 відео по центру (85% екрану), а з боків визирають наступні */
+    .video-slide { flex: 0 0 82%; } 
+    /* Ховаємо стрілочки, бо на телефоні гортають пальцем */
+    .prev-btn, .next-btn { display: none; } 
+    .video-track { padding: 15px 5px; gap: 15px; scroll-padding: 0 9%; }
 }
