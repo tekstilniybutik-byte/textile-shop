@@ -391,8 +391,9 @@ function updateModalDisplayPrice() {
     const priceElement = document.getElementById('modal-price');
     const totalElement = document.getElementById('modal-total-price');
     
-    // Елемент для виводу розміру (якщо ви додали його в HTML)
+    // Елементи для виводу розміру
     const sizeElement = document.getElementById('modal-size-value'); 
+    const sizeWrapper = document.getElementById('modal-size-wrapper');
 
     // 1. Визначаємо базову ціну за 1 шт (враховуємо, чи є акція)
     let basePrice = currentVariation.sale_price ? currentVariation.sale_price : currentVariation.price;
@@ -433,12 +434,24 @@ function updateModalDisplayPrice() {
         totalElement.innerText = `${finalPrice * currentQty} ₴`;
     }
 
-    // 4. ВИВІД РОЗМІРУ (беремо з поля "Назва варіації" з адмінки)
-    if (sizeElement) {
-        sizeElement.textContent = currentVariation.name || 'Стандартний';
+    // 4. РОЗУМНИЙ ВИВІД РОЗМІРУ
+    if (sizeElement && sizeWrapper) {
+        const vName = currentVariation.name ? currentVariation.name.trim() : '';
+        
+        // Перевіряємо: якщо назви немає АБО вона дефолтна ("Стандартний"), І це єдиний розмір у товару
+        const isDefaultName = !vName || vName.toLowerCase().includes('стандарт');
+        const isOnlyOneVariation = currentProduct && currentProduct.variations && currentProduct.variations.length <= 1;
+
+        if (isDefaultName && isOnlyOneVariation) {
+            // Ховаємо весь рядок "Розмір: ...", бо він тут не потрібен
+            sizeWrapper.style.display = 'none';
+        } else {
+            // Показуємо рядок і виводимо те, що ви написали (напр. "200x230" або "Євро")
+            sizeWrapper.style.display = 'block';
+            sizeElement.textContent = vName || 'Один розмір'; 
+        }
     }
 }
-
 window.closeModal = function() {
     document.getElementById('product-modal').classList.remove('show');
     document.body.style.overflow = '';
