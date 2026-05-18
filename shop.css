@@ -1707,67 +1707,67 @@ footer {
     pointer-events: none;
 }
 
-/* Сітка 2х2 */
+/* --- СІТКА ПАЗЛУ (ОПТИМІЗОВАНА БЕЗ РОЗТЯГУВАНЬ) --- */
 .puzzle-grid {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
     z-index: 1;
 }
 
-/* Налаштування для кожної частинки пазлу */
+/* Налаштування для кожної частинки */
 .puzzle-piece {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%; /* Кожна частинка займає весь екран */
     background-image: url('alla.png');
-    background-size: 100vw 100vh; /* Розтягуємо на весь екран, щоб кути збігалися */
+    background-size: cover; /* МАГІЯ ТУТ: Картинка більше ніколи не розтягнеться! */
+    background-position: center;
     background-repeat: no-repeat;
     opacity: 0;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    will-change: transform, opacity; /* Готуємо відеокарту до анімації */
+    will-change: transform, opacity;
 }
 
-/* Магічне розрізання картинки по кутах + індивідуальні траєкторії літання */
+/* Віртуальні ножиці: розрізаємо ідеальну картинку на 4 рівні частини */
+.puzzle-piece.item-1 { clip-path: polygon(0 0, 50% 0, 50% 50%, 0 50%); }
+.puzzle-piece.item-2 { clip-path: polygon(50% 0, 100% 0, 100% 50%, 50% 50%); }
+.puzzle-piece.item-3 { clip-path: polygon(0 50%, 50% 50%, 50% 100%, 0 100%); }
+.puzzle-piece.item-4 { clip-path: polygon(50% 50%, 100% 50%, 100% 100%, 50% 100%); }
+
+/* --- МАКСИМАЛЬНО ПЛАВНІ АНІМАЦІЇ ЗЛІТАННЯ --- */
+/* Використовуємо м'який cubic-bezier для ефекту кінематографічності */
 .puzzle-piece.item-1 {
-    background-position: left top;
-    animation: puzzleLeftTop 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    animation: glideInTopLeft 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     animation-delay: 0.1s;
 }
 .puzzle-piece.item-2 {
-    background-position: right top;
-    animation: puzzleRightTop 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-    animation-delay: 0.3s;
-}
-.puzzle-piece.item-3 {
-    background-position: left bottom;
-    animation: puzzleLeftBottom 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    animation: glideInTopRight 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     animation-delay: 0.2s;
 }
+.puzzle-piece.item-3 {
+    animation: glideInBottomLeft 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: 0.3s;
+}
 .puzzle-piece.item-4 {
-    background-position: right bottom;
-    animation: puzzleRightBottom 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    animation: glideInBottomRight 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     animation-delay: 0.4s;
 }
 
-/* Ідеально плавні 3D-зсуви з кутів до центру */
-@keyframes puzzleLeftTop {
-    0% { transform: translate(-150px, -150px); opacity: 0; }
-    100% { transform: translate(0, 0); opacity: 1; }
+/* Рух зроблено через % та з легким зменшенням масштабу (scale), щоб телефон не лагав */
+@keyframes glideInTopLeft {
+    0% { transform: translate(-4%, -4%) scale(1.03); opacity: 0; }
+    100% { transform: translate(0, 0) scale(1); opacity: 1; }
 }
-@keyframes puzzleRightTop {
-    0% { transform: translate(150px, -150px); opacity: 0; }
-    100% { transform: translate(0, 0); opacity: 1; }
+@keyframes glideInTopRight {
+    0% { transform: translate(4%, -4%) scale(1.03); opacity: 0; }
+    100% { transform: translate(0, 0) scale(1); opacity: 1; }
 }
-@keyframes puzzleLeftBottom {
-    0% { transform: translate(-150px, 150px); opacity: 0; }
-    100% { transform: translate(0, 0); opacity: 1; }
+@keyframes glideInBottomLeft {
+    0% { transform: translate(-4%, 4%) scale(1.03); opacity: 0; }
+    100% { transform: translate(0, 0) scale(1); opacity: 1; }
 }
-@keyframes puzzleRightBottom {
-    0% { transform: translate(150px, 150px); opacity: 0; }
-    100% { transform: translate(0, 0); opacity: 1; }
+@keyframes glideInBottomRight {
+    0% { transform: translate(4%, 4%) scale(1.03); opacity: 0; }
+    100% { transform: translate(0, 0) scale(1); opacity: 1; }
 }
 
 /* --- КАТЕГОРІЇ ЗНИЗУ В РЯДОК (ЗІ СВІТІННЯМ) --- */
@@ -1810,17 +1810,42 @@ footer {
     transform: translateY(-2px);
 }
 
-/* Адаптація для телефонів залишається */
+/* --- АДАПТАЦІЯ ДЛЯ ТЕЛЕФОНІВ (З ВЕРТИКАЛЬНИМ ФОТО ТА ПІДСВІТКОЮ) --- */
 @media (max-width: 768px) {
-    .intro-categories-row {
-        bottom: 25px;
-        gap: 15px;
-        flex-wrap: wrap; 
-        padding: 0 15px;
+    
+    /* 1. Підміняємо картинку спеціально для вузьких екранів */
+    .puzzle-piece {
+        background-image: url('dis.png'); 
     }
+
+    /* 2. Позиціонуємо кнопку, щоб вона не перекривала напис на фото */
+    .intro-content {
+        top: 60%; /* Ставимо кнопку між написом і нижнім пазлом */
+    }
+    
+    /* Додаємо кнопці яскраве світіння, щоб вона "кричала" про натискання */
+    .intro-btn {
+        padding: 15px 35px;
+        font-size: 15px;
+        box-shadow: 0 8px 30px rgba(255, 71, 126, 0.6); /* Насичена рожева тінь */
+        border: 1px solid rgba(255, 255, 255, 0.9);
+    }
+
+    /* 3. Робимо категорії знизу 100% читабельними */
+    .intro-categories-row {
+        bottom: 0; /* Притискаємо в самий низ */
+        padding: 40px 10px 25px 10px; /* Даємо місце для градієнта */
+        gap: 12px;
+        /* Легке затемнення знизу екрану (захищає білий текст від світлих ділянок на фото) */
+        background: linear-gradient(to top, rgba(10, 10, 10, 0.85) 0%, rgba(10, 10, 10, 0) 100%);
+    }
+
     .glow-category {
         font-size: 11px;
         letter-spacing: 1px;
+        font-weight: 700;
+        /* Подвійна магія: жорстка чорна тінь для чіткості + м'яка рожева для краси */
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.9), 0 0 15px rgba(255, 71, 126, 1);
     }
 }
 
