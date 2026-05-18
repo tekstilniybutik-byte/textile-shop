@@ -150,24 +150,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- ЗАВАНТАЖЕННЯ ТОВАРІВ ---
 async function loadProducts() {
+    // Скачуємо всі товари, які є в наявності
     const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('in_stock', true)
-        .order('created_at', { ascending: false });
+        .eq('in_stock', true);
 
     if (error) {
         if(productsGrid) productsGrid.innerHTML = `<p style="color:red; text-align:center;">Помилка: ${error.message}</p>`;
         return;
     }
+    
     if (!data || data.length === 0) {
         if(productsGrid) productsGrid.innerHTML = '<p style="text-align:center; grid-column: 1/-1;">Товари скоро з\'являться!</p>';
         return;
     }
 
+    // --- 🎲 МАГІЯ: РАНДОМНЕ ПЕРЕМІШУВАННЯ ТОВАРІВ (Fisher-Yates) ---
+    for (let i = data.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        // Міняємо товари місцями у випадковому порядку
+        [data[i], data[j]] = [data[j], data[i]]; 
+    }
+
+    // Зберігаємо вже перемішаний список і малюємо його на екрані
     allProducts = data;
     renderProducts('all');
-    checkUrlParams(); // Перевіряємо посилання тільки після того, як товари завантажені
+    
+    // Перевіряємо посилання тільки після того, як товари завантажені
+    checkUrlParams(); 
 }
 
 function renderProducts(categoryFilter, page = 1) {
@@ -346,6 +357,26 @@ window.openProductModal = function(productId) {
     const url = new URL(window.location.href);
     url.searchParams.set('art', product.sku || '');
     window.history.pushState({}, '', url);
+    // --- МАГІЯ ДЛЯ ВІДОБРАЖЕННЯ КОМПЛЕКТАЦІЇ ---
+    const compContainer = document.getElementById('modal-components-container');
+    if (compContainer) {
+        // Перевіряємо, чи є у цієї варіації деталі (components)
+        if (currentVariation && currentVariation.components && currentVariation.components.length > 0) {
+            let compsHTML = '<span style="font-weight: 700; color: #2D3436; font-size: 14px; display: block; margin-bottom: 8px;">📦 У наборі:</span><ul style="padding-left: 20px; margin: 0; color: #636E72; font-size: 13.5px; line-height: 1.6;">';
+            
+            // Перебираємо кожну деталь і малюємо її
+            currentVariation.components.forEach(c => {
+                const sizeText = c.size ? ` <span style="opacity: 0.8;">(${c.size})</span>` : '';
+                compsHTML += `<li>${c.name}${sizeText} — <strong>${c.qty} шт.</strong></li>`;
+            });
+            
+            compsHTML += '</ul>';
+            compContainer.innerHTML = compsHTML;
+            compContainer.style.display = 'block'; // Показуємо блок
+        } else {
+            compContainer.style.display = 'none'; // Ховаємо, якщо деталей немає
+        }
+    }
 };
 
 window.changeQty = function(delta) {
@@ -783,4 +814,95 @@ document.addEventListener('DOMContentLoaded', () => {
         // Запускаємо один раз при відкритті кошика, щоб налаштувати правильний вигляд
         updateDeliveryNotice(); 
     }
+
+});
+
+// --- 🪄 ЛОГІКА ДЛЯ ВІКНА "ЯК ЗАМОВИТИ" (ВИПРАВЛЕНА) ---
+// Додаємо window. щоб HTML-кнопки гарантовано бачили ці команди
+window.openHowToOrderModal = function() {
+    const modal = document.getElementById('how-to-order-modal');
+    if (modal) {
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden'; 
+    }
+};
+
+window.closeHowToOrderModal = function() {
+    const modal = document.getElementById('how-to-order-modal');
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = ''; 
+    }
+};
+
+// Це залишаємо як було
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('how-to-order-btn');
+    if (btn) btn.addEventListener('click', window.openHowToOrderModal);
+    
+    const overlay = document.getElementById('how-to-order-modal');
+    if(overlay) {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                window.closeHowToOrderModal();
+            }
+        });
+    }
+});
+
+// --- 💾 РОЗУМНЕ АВТОЗБЕРЕЖЕННЯ (БЕЗ ТЕМНИХ ЕКРАНІВ) ---
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // 1. ВІДНОВЛЕННЯ ПІСЛЯ ОНОВЛЕННЯ (Через імітацію кліку)
+    // Даємо затримку 0.8 сек, щоб товари з бази 100% встигли завантажитися
+    setTimeout(() => {
+        const activeWindow = sessionStorage.getItem('smartActiveWindow');
+        
+        if (activeWindow === 'cart') {
+            // Програмно "натискаємо" на кнопку кошика
+            const cartBtn = document.getElementById('main-cart-btn');
+            if (cartBtn) cartBtn.click();
+        } 
+        else if (activeWindow === 'how-to-order') {
+            // Відкриваємо інструкцію
+            if (typeof window.openHowToOrderModal === 'function') {
+                window.openHowToOrderModal();
+            }
+        }
+    }, 800); 
+
+    // 2. ЗАПАМ'ЯТОВУВАННЯ СТАНУ (Спостерігач)
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.attributeName === 'class') {
+                const target = mutation.target;
+                
+                if (target.classList.contains('show')) {
+                    // Якщо відкрили кошик
+                    if (target.id === 'cart-modal' || target.id === 'cart-overlay') {
+                        sessionStorage.setItem('smartActiveWindow', 'cart');
+                    } 
+                    // Якщо відкрили інструкцію
+                    else if (target.id === 'how-to-order-modal') {
+                        sessionStorage.setItem('smartActiveWindow', 'how-to-order');
+                    }
+                } else {
+                    // Якщо вікна закрилися - очищаємо пам'ять браузера
+                    const currentMemory = sessionStorage.getItem('smartActiveWindow');
+                    if (
+                        (currentMemory === 'cart' && (target.id === 'cart-modal' || target.id === 'cart-overlay')) ||
+                        (currentMemory === 'how-to-order' && target.id === 'how-to-order-modal')
+                    ) {
+                        sessionStorage.removeItem('smartActiveWindow');
+                    }
+                }
+            }
+        });
+    });
+
+    // Підключаємо спостерігач до вікон кошика та інструкції
+    ['cart-modal', 'cart-overlay', 'how-to-order-modal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) observer.observe(el, { attributes: true, attributeFilter: ['class'] });
+    });
 });

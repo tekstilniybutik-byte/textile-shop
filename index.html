@@ -40,9 +40,9 @@
             
             <a href="#" class="logo">Текстильний <span>бутік</span></a>
             
-            <div class="cart-btn">
-                🛍️ <span class="cart-count">0</span>
-            </div>
+           <div id="main-cart-btn" class="cart-btn">
+            🛍️ <span class="cart-count">0</span>
+        </div>
         </div>
     </header>
 
@@ -248,7 +248,8 @@
             <div id="modal-size-display" style="font-size: 14px; color: #636E72; margin-bottom: 15px;">
                 <strong>Розмір:</strong> <span id="modal-size-value"></span>
             </div>
-
+            <div id="modal-components-container" style="display: none; background: #f8f9fa; padding: 12px 16px; border-radius: 12px; margin-bottom: 20px; border: 1px dashed #ced4da;">
+            </div>
             <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 20px;">
             <div style="font-size: 24px; font-weight: 800; color: #2D3436;" id="modal-price"></div>
                 <span id="modal-bulk-hint" style="font-size: 13px; color: #27ae60; font-weight: 600; padding: 4px 8px; background: #e8f8f5; border-radius: 8px; display: none;"></span>
@@ -326,6 +327,9 @@
         <div id="cart-items" class="cart-items-container"></div>
 
         <div class="checkout-form-mono">
+            <button type="button" id="how-to-order-btn" class="how-to-order-btn">
+            <span style="font-size: 16px;">✨</span> Як оформити замовлення?
+            </button>
             <h3 class="section-title">Дані для відправки:</h3>
             <input type="text" id="client-name" class="mono-input" placeholder="ПІБ отримувача">
             <input type="tel" id="client-phone" class="mono-input" placeholder="Номер телефону">
@@ -396,6 +400,40 @@
                 <i class="fab fa-viber"></i> Viber
             </button>
         </div>
+    </div>
+</div>
+<div id="how-to-order-modal" class="custom-modal-overlay">
+    <div class="custom-modal-box">
+        <button type="button" class="close-custom-modal" onclick="closeHowToOrderModal()">×</button>
+        <h3 class="custom-modal-title">Як зробити замовлення?</h3>
+        
+        <div class="howto-steps">
+            <div class="howto-step">
+                <div class="step-icon">📝</div>
+                <div class="step-text">
+                    <strong>1. Дані та доставка</strong>
+                    Введіть дані та оберіть пошту: Нова Пошта або Укрпошта <span class="highlight-green">(Укрпошта — без передплати!)</span>. Вкажіть відділення, поштомат або індекс.
+                </div>
+            </div>
+            
+            <div class="howto-step">
+                <div class="step-icon">💬</div>
+                <div class="step-text">
+                    <strong>2. Оформлення у месенджері</strong>
+                    Оберіть зручний спосіб: натисніть кнопку "Telegram" або "Viber" внизу кошика. Ваше замовлення одразу перенесеться в чат.
+                </div>
+            </div>
+            
+            <div class="howto-step">
+                <div class="step-icon">🤝</div>
+                <div class="step-text">
+                    <strong>3. Підтвердження</strong>
+                    Менеджер швидко перевірить наявність товару та, за потреби, з радістю підкаже суму передплати.
+                </div>
+            </div>
+        </div>
+        
+        <button type="button" class="modal-understand-btn" onclick="closeHowToOrderModal()">Все зрозуміло! ✨</button>
     </div>
 </div>
 </body>
