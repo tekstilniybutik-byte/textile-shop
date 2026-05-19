@@ -97,7 +97,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 qty: currentQty,
                 art: currentProduct.sku || "Без артикулу",
                 img: currentProduct.image_url,
-                link: productLink // Зберігаємо посилання в кошик
+                link: productLink,
+                components: currentVariation.components || [] // ТЕПЕР КОШИК ЗАПАМ'ЯТАЄ ДЕТАЛІ!
             };
 
             myCart.push(newItem);
@@ -390,65 +391,59 @@ function updateModalDisplayPrice() {
     if (!currentVariation) return;
     const priceElement = document.getElementById('modal-price');
     const totalElement = document.getElementById('modal-total-price');
-    
-    // Елементи для виводу розміру
     const sizeElement = document.getElementById('modal-size-value'); 
     const sizeWrapper = document.getElementById('modal-size-wrapper');
+    // Знаходимо блок комплектації
+    const compContainer = document.getElementById('modal-components-container'); 
 
-    // 1. Визначаємо базову ціну за 1 шт (враховуємо, чи є акція)
     let basePrice = currentVariation.sale_price ? currentVariation.sale_price : currentVariation.price;
-    let bulkPrice = currentVariation.bulk_price; // Ціна від 2 шт
+    let bulkPrice = currentVariation.bulk_price;
     let finalPrice = basePrice;
 
-    // 2. Логіка відображення ціни
     if (currentQty >= 2 && bulkPrice) {
-        // ЯКЩО КУПУЮТЬ 2 АБО БІЛЬШЕ:
         finalPrice = bulkPrice;
-        
-        // Показуємо просто гуртову ціну (без плашок "від 2-х", бо умова вже виконана)
         priceElement.innerHTML = `${finalPrice} ₴`;
-        
     } else {
-        // ЯКЩО КУПУЮТЬ 1 ШТ:
         finalPrice = basePrice;
         let priceHTML = '';
-        
-        // Якщо є акція, спочатку малюємо перекреслену стару ціну
         if (currentVariation.sale_price) {
             priceHTML += `<span style="text-decoration: line-through; color: #8e8e93; font-size: 16px; margin-right: 8px;">${currentVariation.price} ₴</span>`;
         }
-        
-        // Малюємо поточну ціну за 1 шт
         priceHTML += `${finalPrice} ₴`;
-
-        // ДОДАЄМО КРАСИВУ ЗЕЛЕНУ ПІДКАЗКУ "від 2-х од." (якщо вона є в адмінці)
         if (bulkPrice) {
             priceHTML += `<span style="font-size: 13px; color: #27ae60; font-weight: 600; padding: 4px 8px; background: #e8f8f5; border-radius: 8px; margin-left: 12px; vertical-align: middle;">від 2-х од. ${bulkPrice} ₴</span>`;
         }
-        
         priceElement.innerHTML = priceHTML;
     }
 
-    // 3. Оновлюємо суму "Разом"
-    if (totalElement) {
-        totalElement.innerText = `${finalPrice * currentQty} ₴`;
-    }
+    if (totalElement) totalElement.innerText = `${finalPrice * currentQty} ₴`;
 
-    // 4. РОЗУМНИЙ ВИВІД РОЗМІРУ
     if (sizeElement && sizeWrapper) {
         const vName = currentVariation.name ? currentVariation.name.trim() : '';
-        
-        // Перевіряємо: якщо назви немає АБО вона дефолтна ("Стандартний"), І це єдиний розмір у товару
         const isDefaultName = !vName || vName.toLowerCase().includes('стандарт');
         const isOnlyOneVariation = currentProduct && currentProduct.variations && currentProduct.variations.length <= 1;
 
         if (isDefaultName && isOnlyOneVariation) {
-            // Ховаємо весь рядок "Розмір: ...", бо він тут не потрібен
             sizeWrapper.style.display = 'none';
         } else {
-            // Показуємо рядок і виводимо те, що ви написали (напр. "200x230" або "Євро")
             sizeWrapper.style.display = 'block';
             sizeElement.textContent = vName || 'Один розмір'; 
+        }
+    }
+
+    // --- МАГІЯ: ДИНАМІЧНЕ ОНОВЛЕННЯ КОМПЛЕКТАЦІЇ ---
+    if (compContainer) {
+        if (currentVariation && currentVariation.components && currentVariation.components.length > 0) {
+            let compsHTML = '<span style="font-weight: 700; color: #2D3436; font-size: 14px; display: block; margin-bottom: 8px;">📦 У наборі:</span><ul style="padding-left: 20px; margin: 0; color: #636E72; font-size: 13.5px; line-height: 1.6;">';
+            currentVariation.components.forEach(c => {
+                const sizeText = c.size ? ` <span style="opacity: 0.8;">(${c.size})</span>` : '';
+                compsHTML += `<li>${c.name}${sizeText} — <strong>${c.qty} шт.</strong></li>`;
+            });
+            compsHTML += '</ul>';
+            compContainer.innerHTML = compsHTML;
+            compContainer.style.display = 'block';
+        } else {
+            compContainer.style.display = 'none';
         }
     }
 }
@@ -519,6 +514,8 @@ window.removeFromCart = function(index) {
 
 // --- ВІДПРАВКА ЗАМОВЛЕННЯ ---
 // --- ВІДПРАВКА ЗАМОВЛЕННЯ ---
+// --- ВІДПРАВКА ЗАМОВЛЕННЯ (ПРЯМА ВЕРСІЯ З АВТОЗАПОВНЕННЯМ) ---
+// --- ВІДПРАВКА ЗАМОВЛЕННЯ (ПРЯМА ВЕРСІЯ З АВТОЗАПОВНЕННЯМ) ---
 window.sendOrder = function(platform) {
     const nameInput = document.getElementById('client-name');
     const phoneInput = document.getElementById('client-phone');
@@ -534,6 +531,7 @@ window.sendOrder = function(platform) {
         alert("Будь ласка, введіть ПІБ та номер телефону!");
         return;
     }
+    
     if (myCart.length === 0) {
         alert("Кошик порожній!");
         return;
@@ -544,11 +542,23 @@ window.sendOrder = function(platform) {
 
     let itemsText = "";
     let totalSum = 0;
+    
+    // Формуємо список товарів разом із деталями комплектації
     myCart.forEach((item, index) => {
         const itemQty = item.qty || 1;
         itemsText += `${index + 1}. ${item.title} ${item.variation !== 'Стандартна' ? '('+item.variation+')' : ''} — ${item.price} ₴ x ${itemQty} шт\n`;
+        
+        // Додаємо розписані деталі варіації, якщо вони є
+        if (item.components && item.components.length > 0) {
+            itemsText += `   📦 У наборі:\n`;
+            item.components.forEach(c => {
+                itemsText += `     - ${c.name} ${c.size ? '('+c.size+')' : ''} - ${c.qty} шт.\n`;
+            });
+        }
+        
         itemsText += `   Арт: ${item.art}\n`;
-        if (item.link) itemsText += `   🔗 Посилання: ${item.link}\n`; // ДОДАЄМО ПОСИЛАННЯ В ТЕКСТ
+        if (item.link) itemsText += `   🔗 Посилання: ${item.link}\n`; 
+        
         totalSum += item.price * itemQty;
     });
 
@@ -565,7 +575,7 @@ window.sendOrder = function(platform) {
         message += `📍 Доставка: Нова Пошта (${deliveryType})\n`;
         message += `   Місто: ${city}\n`;
         message += `   №: ${branch}\n`;
-        message += `💳 Оплата: За реквізитами ФОП\n\n`;
+        message += `💳 Передплата: за реквізитами ФОП\n\n`;
     }
 
     message += `📦 Товари:\n${itemsText}\n`;
@@ -576,14 +586,15 @@ window.sendOrder = function(platform) {
     const tgUsername = "AllaVerba1"; 
 
     if (platform === 'telegram') {
+        // ДЛЯ TELEGRAM: Відкриваємо чат, де текст уже підставлений у поле введення!
         window.open(`https://t.me/${tgUsername}?text=${encodedMessage}`, '_blank');
-    } else if (platform === 'viber') {
-        // НАДІЙНИЙ СПОСІБ ДЛЯ VIBER: копіюємо текст у буфер обміну і відкриваємо чат
+    } 
+    else if (platform === 'viber') {
+        // ДЛЯ VIBER: Копіюємо в буфер з попередженням, бо інакше текст у приватний чат не передати
         navigator.clipboard.writeText(message).then(() => {
             alert("✅ Дані замовлення збережено!\n\nЗараз відкриється Viber. Просто затисніть поле вводу повідомлення і натисніть «Вставити».");
             window.location.href = `viber://chat?number=%2B${myPhone}`;
         }).catch(() => {
-            // Резервний варіант, якщо телефон заблокував копіювання
             window.location.href = `viber://chat?number=%2B${myPhone}`;
         });
     }
