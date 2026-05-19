@@ -527,7 +527,7 @@ window.sendOrder = function(platform) {
     const city = cityInput ? cityInput.value.trim() : '';
     const branch = branchInput ? branchInput.value.trim() : '';
 
-   if (!name || !phone) {
+    if (!name || !phone) {
         showToast("Увага!", "Будь ласка, введіть ПІБ та номер телефону.", "error");
         return;
     }
@@ -548,7 +548,6 @@ window.sendOrder = function(platform) {
         const itemQty = item.qty || 1;
         itemsText += `${index + 1}. ${item.title} ${item.variation !== 'Стандартна' ? '('+item.variation+')' : ''} — ${item.price} ₴ x ${itemQty} шт\n`;
         
-        // Додаємо розписані деталі варіації, якщо вони є
         if (item.components && item.components.length > 0) {
             itemsText += `   📦 У наборі:\n`;
             item.components.forEach(c => {
@@ -567,24 +566,16 @@ window.sendOrder = function(platform) {
     message += `📞 Тел: ${phone}\n\n`;
     
     if (deliveryService === 'Укрпошта') {
-        message += `📍 Доставка: Укрпошта\n`;
-        message += `   Місто/Село: ${city}\n`;
-        message += `   Індекс: ${branch}\n`;
-        message += `💳 Оплата: При отриманні (Без передплати)\n\n`;
+        message += `📍 Доставка: Укрпошта\n   Місто: ${city}\n   Індекс: ${branch}\n💳 Оплата: При отриманні (Без передплати)\n\n`;
     } else {
-        message += `📍 Доставка: Нова Пошта (${deliveryType})\n`;
-        message += `   Місто: ${city}\n`;
-        message += `   №: ${branch}\n`;
-        message += `💳 Передплата: за реквізитами ФОП\n\n`;
+        message += `📍 Доставка: Нова Пошта (${deliveryType})\n   Місто: ${city}\n   №: ${branch}\n💳 Передплата: за реквізитами ФОП\n\n`;
     }
 
     message += `📦 Товари:\n${itemsText}\n`;
     message += `💰 Разом: ${totalSum} ₴\n`;
 
-    const encodedMessage = encodeURIComponent(message);
-    const myPhone = "380984165936"; 
-    const tgUsername = "AllaVerba1"; 
-const orderItemsForDb = myCart.map(item => ({
+    // 1. Зберігаємо в базу даних
+    const orderItemsForDb = myCart.map(item => ({
         title: item.title,
         variation: item.variation,
         price: item.price,
@@ -593,7 +584,6 @@ const orderItemsForDb = myCart.map(item => ({
         img: item.img
     }));
 
-    // Відправляємо в базу в фоновому режимі (не змушуємо клієнта чекати)
     supabase.from('orders').insert([{
         client_name: name,
         client_phone: phone,
@@ -605,26 +595,28 @@ const orderItemsForDb = myCart.map(item => ({
         items: orderItemsForDb,
         status: 'Нове'
     }]).then(({ error }) => {
-        if (error) console.error("Помилка збереження замовлення в БД:", error.message);
+        if (error) console.error("Помилка збереження в БД:", error.message);
     });
-    if (platform === 'telegram') {
-        // ДЛЯ TELEGRAM: Відкриваємо чат, де текст уже підставлений у поле введення!
-        window.open(`https://t.me/${tgUsername}?text=${encodedMessage}`, '_blank');
-    } 
-    else if (platform === 'viber') {
-        // ДЛЯ VIBER: Виводимо красиве сповіщення і копіюємо в буфер
-        navigator.clipboard.writeText(message).then(() => {
-            showToast("Майже готово! ✨", "Зараз відкриється Viber. Просто затисніть поле вводу і натисніть «Вставити».", "info");
-            
-            // Робимо малесеньку затримку, щоб людина встигла прочитати сповіщення перед відкриттям вайбера
-            setTimeout(() => {
+
+    // 2. Уніфікована логіка копіювання для обох месенджерів
+    const myPhone = "380984165936"; 
+    const tgUsername = "AllaVerba1"; 
+
+    navigator.clipboard.writeText(message).then(() => {
+        showToast("Дані збережено! ✨", "Просто затисніть поле вводу у месенджері та натисніть «Вставити».", "info");
+        
+        setTimeout(() => {
+            if (platform === 'telegram') {
+                window.location.href = `tg://resolve?domain=${tgUsername}`;
+            } else if (platform === 'viber') {
                 window.location.href = `viber://chat?number=%2B${myPhone}`;
-            }, 1000);
-            
-        }).catch(() => {
-            window.location.href = `viber://chat?number=%2B${myPhone}`;
-        });
-    }
+            }
+        }, 1000);
+    }).catch(() => {
+        // Якщо копіювання не спрацювало (наприклад, старий браузер)
+        if (platform === 'telegram') window.open(`https://t.me/${tgUsername}`, '_blank');
+        else if (platform === 'viber') window.location.href = `viber://chat?number=%2B${myPhone}`;
+    });
 };
 // --- ЛОГІКА ВІДКРИТТЯ ВІДГУКІВ (LIGHTBOX) ---
 document.addEventListener('DOMContentLoaded', () => {
