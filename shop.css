@@ -2381,3 +2381,81 @@ footer {
     transform: translateY(2px); /* Ефект реального натискання */
     box-shadow: 0 4px 10px rgba(255, 71, 126, 0.3);
 }
+
+/* =======================================================
+   🍞 ГАРНІ СПОВІЩЕННЯ (TOAST NOTIFICATIONS)
+   ======================================================= */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 99999; /* Поверх абсолютно усього */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none; /* Щоб не блокувати кліки по сайту */
+}
+
+.custom-toast {
+    min-width: 280px;
+    max-width: 380px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: 16px;
+    padding: 16px 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    /* Початковий стан (сховано за екраном) */
+    transform: translateX(120%);
+    opacity: 0;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    pointer-events: auto; /* Сам тоаст можна клікати */
+    border-left: 6px solid; /* Кольорова лінія збоку */
+}
+
+.custom-toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+/* Кольорові теми для різних подій */
+.custom-toast.error { border-left-color: #FF4757; }
+.custom-toast.success { border-left-color: #2ED573; }
+.custom-toast.info { border-left-color: #2AABEE; } /* Колір Telegram/Viber */
+
+.toast-icon { font-size: 24px; flex-shrink: 0; line-height: 1; }
+.toast-content { flex: 1; }
+
+.toast-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #2D3436;
+    margin-bottom: 4px;
+}
+
+.toast-message {
+    font-size: 13px;
+    color: #636E72;
+    line-height: 1.4;
+}
+
+/* Ідеально для телефонів: виїжджають зверху по центру */
+@media (max-width: 480px) {
+    .toast-container {
+        top: 20px; left: 50%; right: auto;
+        transform: translateX(-50%);
+        width: 90%;
+        align-items: center;
+    }
+    .custom-toast {
+        transform: translateY(-150%); /* Ховаємо вгору */
+        width: 100%;
+        max-width: 100%;
+    }
+    .custom-toast.show {
+        transform: translateY(0);
+    }
+}

@@ -527,13 +527,13 @@ window.sendOrder = function(platform) {
     const city = cityInput ? cityInput.value.trim() : '';
     const branch = branchInput ? branchInput.value.trim() : '';
 
-    if (!name || !phone) {
-        alert("Будь ласка, введіть ПІБ та номер телефону!");
+   if (!name || !phone) {
+        showToast("Увага!", "Будь ласка, введіть ПІБ та номер телефону.", "error");
         return;
     }
     
     if (myCart.length === 0) {
-        alert("Кошик порожній!");
+        showToast("Кошик порожній", "Додайте товари, щоб зробити замовлення 🛍️", "error");
         return;
     }
 
@@ -584,16 +584,43 @@ window.sendOrder = function(platform) {
     const encodedMessage = encodeURIComponent(message);
     const myPhone = "380984165936"; 
     const tgUsername = "AllaVerba1"; 
+const orderItemsForDb = myCart.map(item => ({
+        title: item.title,
+        variation: item.variation,
+        price: item.price,
+        qty: item.qty,
+        art: item.art,
+        img: item.img
+    }));
 
+    // Відправляємо в базу в фоновому режимі (не змушуємо клієнта чекати)
+    supabase.from('orders').insert([{
+        client_name: name,
+        client_phone: phone,
+        client_city: city,
+        client_branch: branch,
+        delivery_service: deliveryService,
+        delivery_type: deliveryType,
+        total_sum: totalSum,
+        items: orderItemsForDb,
+        status: 'Нове'
+    }]).then(({ error }) => {
+        if (error) console.error("Помилка збереження замовлення в БД:", error.message);
+    });
     if (platform === 'telegram') {
         // ДЛЯ TELEGRAM: Відкриваємо чат, де текст уже підставлений у поле введення!
         window.open(`https://t.me/${tgUsername}?text=${encodedMessage}`, '_blank');
     } 
     else if (platform === 'viber') {
-        // ДЛЯ VIBER: Копіюємо в буфер з попередженням, бо інакше текст у приватний чат не передати
+        // ДЛЯ VIBER: Виводимо красиве сповіщення і копіюємо в буфер
         navigator.clipboard.writeText(message).then(() => {
-            alert("✅ Дані замовлення збережено!\n\nЗараз відкриється Viber. Просто затисніть поле вводу повідомлення і натисніть «Вставити».");
-            window.location.href = `viber://chat?number=%2B${myPhone}`;
+            showToast("Майже готово! ✨", "Зараз відкриється Viber. Просто затисніть поле вводу і натисніть «Вставити».", "info");
+            
+            // Робимо малесеньку затримку, щоб людина встигла прочитати сповіщення перед відкриттям вайбера
+            setTimeout(() => {
+                window.location.href = `viber://chat?number=%2B${myPhone}`;
+            }, 1000);
+            
         }).catch(() => {
             window.location.href = `viber://chat?number=%2B${myPhone}`;
         });
@@ -930,3 +957,38 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el) observer.observe(el, { attributes: true, attributeFilter: ['class'] });
     });
 });
+
+// --- 🍞 ЛОГІКА ГАРНИХ СПОВІЩЕНЬ (TOASTS) ---
+window.showToast = function(title, message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `custom-toast ${type}`;
+
+    let icon = '✅';
+    if (type === 'error') icon = '❌';
+    if (type === 'info') icon = '💡';
+
+    toast.innerHTML = `
+        <div class="toast-icon">${icon}</div>
+        <div class="toast-content">
+            <div class="toast-title">${title}</div>
+            <div class="toast-message">${message}</div>
+        </div>
+    `;
+
+    container.appendChild(toast);
+
+    // Плавна поява
+    requestAnimationFrame(() => {
+        toast.classList.add('show');
+    });
+
+    // Видаляємо через певний час (довше для інструкцій, швидше для помилок)
+    const duration = type === 'info' ? 5500 : 3500;
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 500); // Чекаємо завершення анімації
+    }, duration);
+};
