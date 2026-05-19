@@ -275,20 +275,31 @@ function renderPagination(totalPages) {
 }
 
 // СЛУХАЧІ ПОДІЙ ДЛЯ РЯДКА ПОШУКУ
+// СЛУХАЧІ ПОДІЙ ДЛЯ РЯДКА ПОШУКУ (ОПТИМІЗОВАНО З DEBOUNCE)
 document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('search-input');
     const clearSearchBtn = document.getElementById('clear-search');
 
+    // Функція-запобіжник (Debounce): чекає, поки клієнт перестане швидко друкувати
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
     if (searchInput) {
-        // Пошук спрацьовує миттєво під час введення кожної літери (без перезавантаження)
-       searchInput.addEventListener('input', () => {
+        // Пошук спрацює лише через 300мс після того, як ви ввели останню літеру
+        const optimizedSearch = debounce(() => {
             renderProducts(currentCategory, 1);
-        });
+        }, 300);
+
+        searchInput.addEventListener('input', optimizedSearch);
     }
 
     if (clearSearchBtn) {
-        // Очищення рядка при натисканні на хрестик
-       clearSearchBtn.addEventListener('click', () => {
+        clearSearchBtn.addEventListener('click', () => {
             searchInput.value = '';
             renderProducts(currentCategory, 1);
             searchInput.focus(); 
@@ -316,6 +327,25 @@ window.openProductModal = function(productId) {
     document.getElementById('modal-qty').innerText = currentQty;
 
     document.getElementById('modal-img').src = product.image_url;
+    // --- МАГІЯ ГАЛЕРЕЇ ---
+    // Беремо масив фотографій або створюємо його з одного головного фото
+    const productImages = (product.images && product.images.length > 0) ? product.images : [product.image_url];
+    
+    // Встановлюємо перше фото
+    document.getElementById('modal-img').src = productImages[0];
+    
+    const thumbsContainer = document.getElementById('modal-gallery-thumbs');
+    if (thumbsContainer) {
+        if (productImages.length > 1) {
+            // Якщо фото більше одного - малюємо мініатюри
+            thumbsContainer.innerHTML = productImages.map((img, idx) => `
+                <img src="${img}" class="modal-thumb ${idx === 0 ? 'active' : ''}" onclick="window.changeMainImage('${img}', this)">
+            `).join('');
+        } else {
+            // Якщо фото одне - ховаємо стрічку
+            thumbsContainer.innerHTML = ''; 
+        }
+    }
     document.getElementById('modal-title').innerText = product.title;
     document.getElementById('modal-art').innerText = product.sku ? `Арт: #${product.sku}` : 'Арт: —';
     document.getElementById('modal-desc').innerText = product.description || '';
@@ -983,4 +1013,14 @@ window.showToast = function(title, message, type = 'success') {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 500); // Чекаємо завершення анімації
     }, duration);
+};
+
+// --- ФУНКЦІЯ ПЕРЕМИКАННЯ ФОТО В ГАЛЕРЕЇ ---
+window.changeMainImage = function(src, element) {
+    // Змінюємо головне зображення
+    document.getElementById('modal-img').src = src;
+    
+    // Переносимо червону рамочку на активну мініатюру
+    document.querySelectorAll('.modal-thumb').forEach(th => th.classList.remove('active'));
+    if (element) element.classList.add('active');
 };
